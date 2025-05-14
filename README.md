@@ -27,7 +27,27 @@ We use LLaVA codebase to train FastVLM variants. In order to train or finetune y
 please follow instructions provided in [LLaVA](https://github.com/haotian-liu/LLaVA) codebase. 
 We provide instructions for running inference with our models.   
 
+
 ### Setup
+#### 🔹 Option 1: Using `uv` (fast Python package manager)
+
+```bash
+# 1. Install uv if not already installed
+pip3 install uv
+
+# 2. Create a virtual environment
+uv venv .venv
+
+# 3. Activate the virtual environment
+source .venv/bin/activate  # On macOS/Linux
+# .venv\\Scripts\\activate  # On Windows (use this instead)
+
+# 4. Sync and install dependencies
+uv sync
+```
+
+#### 🔸 Option 2: Using conda
+
 ```bash
 conda create -n fastvlm python=3.10
 conda activate fastvlm
@@ -56,7 +76,7 @@ bash get_models.sh   # Files will be downloaded to `checkpoints` directory.
 To run inference of PyTorch checkpoint, follow the instruction below
 ```bash
 python predict.py --model-path /path/to/checkpoint-dir \
-                  --image-file /path/to/image.png \
+                  --image-file test/image.png \
                   --prompt "Describe the image."
 ```
 

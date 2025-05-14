@@ -7,6 +7,7 @@ import argparse
 
 import torch
 from PIL import Image
+from loguru import logger
 
 from llava.utils import disable_torch_init
 from llava.conversation import conv_templates
@@ -15,9 +16,22 @@ from llava.mm_utils import tokenizer_image_token, process_images, get_model_name
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 
 
+if torch.backends.mps.is_available():
+    DEVICE = torch.device("mps")
+    logger.info("Using MPS device")
+elif torch.cuda.is_available():
+    DEVICE = torch.device("cuda")
+    logger.info("Using CUDA device")
+else:
+    DEVICE = torch.device("cpu")
+    logger.info("Using CPU device")
+
+
 def predict(args):
-    # Remove generation config from model folder
-    # to read generation parameters from args
+    logger.info(f"Starting prediction with model_path={args.model_path}")
+    logger.info(f"Prompt: {args.prompt}")
+    
+    # Remove generation config from model folder to read generation parameters from args
     model_path = os.path.expanduser(args.model_path)
     generation_config = None
     if os.path.exists(os.path.join(model_path, 'generation_config.json')):
@@ -28,7 +42,8 @@ def predict(args):
     # Load model
     disable_torch_init()
     model_name = get_model_name_from_path(model_path)
-    tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, args.model_base, model_name, device="mps")
+    tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, args.model_base, model_name, device=DEVICE)
+    logger.info("Model loaded successfully")
 
     # Construct prompt
     qs = args.prompt
@@ -45,7 +60,7 @@ def predict(args):
     model.generation_config.pad_token_id = tokenizer.pad_token_id
 
     # Tokenize prompt
-    input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).to(torch.device("mps"))
+    input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).to(DEVICE)
 
     # Load and preprocess image
     image = Image.open(args.image_file).convert('RGB')
@@ -65,7 +80,7 @@ def predict(args):
             use_cache=True)
 
         outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
-        print(outputs)
+        logger.success(f"Inference completed. Output: {outputs}")
 
     # Restore generation config
     if generation_config is not None:
