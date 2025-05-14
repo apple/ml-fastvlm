@@ -7,19 +7,34 @@ name = "llava"
 version = "1.2.2.post1"
 description = "Towards GPT-4 like large language and visual assistant."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
 ]
 dependencies = [
-    "torch==2.6.0", "torchvision==0.21.0",
-    "transformers==4.48.3", "tokenizers==0.21.0", "sentencepiece==0.1.99", "shortuuid",
-    "accelerate==1.6.0", "peft>=0.10.0,<0.14.0", "bitsandbytes",
-    "pydantic", "markdown2[all]", "numpy==1.26.4", "scikit-learn==1.2.2",
-    "gradio==5.11.0", "requests", "uvicorn", "fastapi",
-    "einops==0.6.1", "einops-exts==0.0.4", "timm==1.0.15",
-    "coremltools==8.2"
+    "torch==2.6.0",
+    "torchvision==0.21.0",
+    "transformers==4.48.3",
+    "tokenizers==0.21.0",
+    "sentencepiece==0.1.99",
+    "shortuuid",
+    "accelerate==1.6.0",
+    "peft>=0.10.0,<0.14.0",
+    "bitsandbytes",
+    "pydantic",
+    "markdown2[all]",
+    "numpy==1.26.4",
+    "scikit-learn==1.2.2",
+    "gradio==5.11.0",
+    "requests",
+    "uvicorn",
+    "fastapi",
+    "einops==0.6.1",
+    "einops-exts==0.0.4",
+    "timm==1.0.15",
+    "coremltools==8.2",
+    "loguru>=0.7.3",
 ]
 
 [project.optional-dependencies]
