@@ -30,23 +30,19 @@ struct ContentView: View {
 
     @State private var selectedCameraType: CameraType = .continuous
     @State private var isEditingPrompt: Bool = false
-
-    var toolbarItemPlacement: ToolbarItemPlacement {
-        var placement: ToolbarItemPlacement = .navigation
-        #if os(iOS)
-        placement = .topBarLeading
-        #endif
-        return placement
+    
+    var statusTextColor: Color {
+        guard let fastVLMModel = modelManager.currentModel as? FastVLMModel else {
+            return .white
+        }
+        return fastVLMModel.evaluationState == .processingPrompt ? .black : .white
     }
     
-    var statusTextColor : Color {
-        return (modelManager.currentModel as? FastVLMModel)?.evaluationState == .processingPrompt ? .black : .white
-    }
-    
-    var statusBackgroundColor : Color {
+    var statusBackgroundColor: Color {
         guard let fastVLMModel = modelManager.currentModel as? FastVLMModel else {
             return modelManager.running ? .green : .gray
         }
+        
         switch fastVLMModel.evaluationState {
         case .idle:
             return .gray
@@ -60,187 +56,36 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    VStack(alignment: .leading, spacing: 10.0) {
-                        Picker("Camera Type", selection: $selectedCameraType) {
-                            ForEach(CameraType.allCases, id: \.self) { cameraType in
-                                Text(cameraType.rawValue.capitalized).tag(cameraType)
-                            }
-                        }
-                        // Prevent macOS from adding a text label for the picker
-                        .labelsHidden()
-                        .pickerStyle(.segmented)
-                        .onChange(of: selectedCameraType) { _, _ in
-                            // Cancel any in-flight requests when switching modes
-                            modelManager.cancel()
-                        }
-
-                        if let framesToDisplay {
-                            VideoFrameView(
-                                frames: framesToDisplay,
-                                cameraType: selectedCameraType,
-                                action: { frame in
-                                    processSingleFrame(frame)
-                                })
-                                // Because we're using the AVCaptureSession preset
-                                // `.vga640x480`, we can assume this aspect ratio
-                                .aspectRatio(4/3, contentMode: .fit)
-                                #if os(macOS)
-                                .frame(maxWidth: 750)
-                                #endif
-                                .overlay(alignment: .top) {
-                                    if !modelManager.promptTime.isEmpty {
-                                        Text("TTFT \(modelManager.promptTime)")
-                                            .font(.caption)
-                                            .foregroundStyle(.white)
-                                            .monospaced()
-                                            .padding(.vertical, 4.0)
-                                            .padding(.horizontal, 6.0)
-                                            .background(alignment: .center) {
-                                                RoundedRectangle(cornerRadius: 8)
-                                                    .fill(Color.black.opacity(0.6))
-                                            }
-                                            .padding(.top)
-                                    }
-                                }
-                                #if !os(macOS)
-                                .overlay(alignment: .topTrailing) {
-                                    CameraControlsView(
-                                        backCamera: $camera.backCamera,
-                                        device: $camera.device,
-                                        devices: $camera.devices)
-                                    .padding()
-                                }
-                                #endif
-                                .overlay(alignment: .bottom) {
-                                    if selectedCameraType == .continuous {
-                                        Group {
-                                            if let fastVLMModel = modelManager.currentModel as? FastVLMModel, fastVLMModel.evaluationState == .processingPrompt {
-                                                HStack {
-                                                    ProgressView()
-                                                        .tint(self.statusTextColor)
-                                                        .controlSize(.small)
-
-                                                    Text(fastVLMModel.evaluationState.rawValue)
-                                                }
-                                            } else if let fastVLMModel = modelManager.currentModel as? FastVLMModel, fastVLMModel.evaluationState == .idle {
-                                                HStack(spacing: 6.0) {
-                                                    Image(systemName: "clock.fill")
-                                                        .font(.caption)
-
-                                                    Text(fastVLMModel.evaluationState.rawValue)
-                                                }
-                                            }
-                                            else {
-                                                // I'm manually tweaking the spacing to
-                                                // better match the spacing with ProgressView
-                                                HStack(spacing: 6.0) {
-                                                    Image(systemName: "lightbulb.fill")
-                                                        .font(.caption)
-
-                                                    Text(modelManager.running ? "Generating Response" : "Idle")
-                                                }
-                                            }
-                                        }
-                                        .foregroundStyle(self.statusTextColor)
-                                        .font(.caption)
-                                        .bold()
-                                        .padding(.vertical, 6.0)
-                                        .padding(.horizontal, 8.0)
-                                        .background(self.statusBackgroundColor)
-                                        .clipShape(.capsule)
-                                        .padding(.bottom)
-                                    }
-                                }
-                                #if os(macOS)
-                                .frame(maxWidth: .infinity)
-                                .frame(minWidth: 500)
-                                .frame(minHeight: 375)
-                                #endif
-                        }
-                    }
-                }
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-
+                cameraSection
                 promptSections
-
-                Section {
-                    if modelManager.output.isEmpty && modelManager.running {
-                        ProgressView()
-                            .controlSize(.large)
-                            .frame(maxWidth: .infinity)
-                    } else {
-                        ScrollView {
-                            Text(modelManager.output)
-                                .foregroundStyle(isEditingPrompt ? .secondary : .primary)
-                                .textSelection(.enabled)
-                                #if os(macOS)
-                                .font(.headline)
-                                .fontWeight(.regular)
-                                #endif
-                        }
-                        .frame(minHeight: 50.0, maxHeight: 200.0)
-                    }
-                } header: {
-                    Text("Response")
-                        #if os(macOS)
-                        .font(.headline)
-                        .padding(.bottom, 2.0)
-                        #endif
-                }
-
-                #if os(macOS)
-                Spacer()
-                #endif
+                responseSection
             }
-            
-            #if os(iOS)
             .listSectionSpacing(0)
-            #elseif os(macOS)
-            .padding()
-            #endif
             .task {
                 camera.start()
             }
             .task {
                 await modelManager.loadCurrentModel()
             }
-
-            #if !os(macOS)
             .onAppear {
-                // Prevent the screen from dimming or sleeping due to inactivity
                 UIApplication.shared.isIdleTimerDisabled = true
             }
             .onDisappear {
-                // Resumes normal idle timer behavior
                 UIApplication.shared.isIdleTimerDisabled = false
             }
-            #endif
-
-            // task to distribute video frames -- this will cancel
-            // and restart when the view is on/off screen.  note: it is
-            // important that this is here (attached to the VideoFrameView)
-            // rather than the outer view because this has the correct lifecycle
             .task {
                 if Task.isCancelled {
                     return
                 }
-
                 await distributeVideoFrames()
             }
-
             .navigationTitle("FastVLM")
-            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
-            #endif
             .toolbar {
-                ToolbarItem(placement: toolbarItemPlacement) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button {
                         isShowingInfo.toggle()
-                    }
-                    label: {
+                    } label: {
                         Image(systemName: "info.circle")
                     }
                 }
@@ -248,8 +93,7 @@ struct ContentView: View {
                 ToolbarItem(placement: .navigation) {
                     Button {
                         showingModelSelector.toggle()
-                    }
-                    label: {
+                    } label: {
                         HStack {
                             Image(systemName: "cpu")
                             Text(modelManager.selectedModelType.rawValue)
@@ -263,13 +107,11 @@ struct ContentView: View {
                     if isEditingPrompt {
                         Button {
                             isEditingPrompt.toggle()
-                        }
-                        label: {
+                        } label: {
                             Text("Done")
                                 .fontWeight(.bold)
                         }
-                    }
-                    else {
+                    } else {
                         Menu {
                             Button("Describe image") {
                                 prompt = "Describe the image in English."
@@ -283,12 +125,12 @@ struct ContentView: View {
                                 prompt = "What is written in this image?"
                                 promptSuffix = "Output only the text in the image."
                             }
-                            #if !os(macOS)
                             Button("Customize...") {
                                 isEditingPrompt.toggle()
                             }
-                            #endif
-                        } label: { Text("Prompts") }
+                        } label: { 
+                            Text("Prompts") 
+                        }
                     }
                 }
             }
@@ -297,6 +139,140 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingModelSelector) {
                 modelSelectorSheet
+            }
+        }
+    }
+    
+    private var cameraSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 10.0) {
+                Picker("Camera Type", selection: $selectedCameraType) {
+                    ForEach(CameraType.allCases, id: \.self) { cameraType in
+                        Text(cameraType.rawValue.capitalized).tag(cameraType)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .onChange(of: selectedCameraType) { _, _ in
+                    modelManager.cancel()
+                }
+
+                if let framesToDisplay {
+                    videoFrameView(framesToDisplay)
+                }
+            }
+        }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+    }
+    
+    private func videoFrameView(_ frames: AsyncStream<CVImageBuffer>) -> some View {
+        VideoFrameView(
+            frames: frames,
+            cameraType: selectedCameraType,
+            action: { frame in
+                processSingleFrame(frame)
+            })
+            .aspectRatio(4/3, contentMode: .fit)
+            .overlay(alignment: .top) {
+                timeToFirstTokenOverlay
+            }
+            .overlay(alignment: .topTrailing) {
+                cameraControlsOverlay
+            }
+            .overlay(alignment: .bottom) {
+                statusOverlay
+            }
+    }
+    
+    private var timeToFirstTokenOverlay: some View {
+        Group {
+            if !modelManager.promptTime.isEmpty {
+                Text("TTFT \(modelManager.promptTime)")
+                    .font(.caption)
+                    .foregroundStyle(.white)
+                    .monospaced()
+                    .padding(.vertical, 4.0)
+                    .padding(.horizontal, 6.0)
+                    .background(alignment: .center) {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.black.opacity(0.6))
+                    }
+                    .padding(.top)
+            }
+        }
+    }
+    
+    private var cameraControlsOverlay: some View {
+        Group {
+            if let device = camera.device {
+                CameraControlsView(
+                    backCamera: $camera.backCamera,
+                    device: .constant(device),
+                    devices: $camera.devices)
+                .padding()
+            }
+        }
+    }
+    
+    private var statusOverlay: some View {
+        Group {
+            if selectedCameraType == .continuous {
+                statusIndicatorView
+                    .foregroundStyle(statusTextColor)
+                    .font(.caption)
+                    .bold()
+                    .padding(.vertical, 6.0)
+                    .padding(.horizontal, 8.0)
+                    .background(statusBackgroundColor)
+                    .clipShape(.capsule)
+                    .padding(.bottom)
+            }
+        }
+    }
+    
+    private var responseSection: some View {
+        Section {
+            if modelManager.output.isEmpty && modelManager.running {
+                ProgressView()
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
+            } else {
+                ScrollView {
+                    Text(modelManager.output)
+                        .foregroundStyle(isEditingPrompt ? .secondary : .primary)
+                        .textSelection(.enabled)
+                }
+                .frame(minHeight: 50.0, maxHeight: 200.0)
+            }
+        } header: {
+            Text("Response")
+        }
+    }
+    
+    @ViewBuilder
+    private var statusIndicatorView: some View {
+        if let fastVLMModel = modelManager.currentModel as? FastVLMModel, 
+           fastVLMModel.evaluationState == .processingPrompt {
+            HStack {
+                ProgressView()
+                    .tint(statusTextColor)
+                    .controlSize(.small)
+                Text(fastVLMModel.evaluationState.rawValue)
+            }
+        } else if let fastVLMModel = modelManager.currentModel as? FastVLMModel, 
+                  fastVLMModel.evaluationState == .idle {
+            HStack(spacing: 6.0) {
+                Image(systemName: "clock.fill")
+                    .font(.caption)
+                Text(fastVLMModel.evaluationState.rawValue)
+            }
+        } else {
+            HStack(spacing: 6.0) {
+                Image(systemName: "lightbulb.fill")
+                    .font(.caption)
+                Text(modelManager.running ? "Generating Response" : "Idle")
             }
         }
     }
@@ -322,7 +298,6 @@ struct ContentView: View {
 
     var promptForm: some View {
         Group {
-            #if os(iOS)
             Section("Prompt") {
                 TextEditor(text: $prompt)
                     .frame(minHeight: 38)
@@ -332,51 +307,16 @@ struct ContentView: View {
                 TextEditor(text: $promptSuffix)
                     .frame(minHeight: 38)
             }
-            #elseif os(macOS)
-            Section {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading) {
-                        Text("Prompt")
-                            .font(.headline)
-
-                        TextEditor(text: $prompt)
-                            .frame(height: 38)
-                            .padding(.horizontal, 8.0)
-                            .padding(.vertical, 10.0)
-                            .background(Color(.textBackgroundColor))
-                            .cornerRadius(10.0)
-                    }
-
-                    VStack(alignment: .leading) {
-                        Text("Prompt Suffix")
-                            .font(.headline)
-
-                        TextEditor(text: $promptSuffix)
-                            .frame(height: 38)
-                            .padding(.horizontal, 8.0)
-                            .padding(.vertical, 10.0)
-                            .background(Color(.textBackgroundColor))
-                            .cornerRadius(10.0)
-                    }
-                }
-            }
-            .padding(.vertical)
-            #endif
         }
     }
 
     var promptSections: some View {
         Group {
-            #if os(iOS)
             if isEditingPrompt {
                 promptForm
-            }
-            else {
+            } else {
                 promptSummary
             }
-            #elseif os(macOS)
-            promptForm
-            #endif
         }
     }
 
