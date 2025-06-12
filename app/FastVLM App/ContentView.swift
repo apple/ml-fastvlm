@@ -17,7 +17,7 @@ let FRAME_DELAY = Duration.milliseconds(1)
 
 struct ContentView: View {
     @State private var camera = CameraController()
-    @State private var model = FastVLMModel()
+    @State private var modelManager = ModelManager()
 
     /// stream of frames -> VideoFrameView, see distributeVideoFrames
     @State private var framesToDisplay: AsyncStream<CVImageBuffer>?
@@ -26,6 +26,7 @@ struct ContentView: View {
     @State private var promptSuffix = "Output should be brief, about 15 words or less."
 
     @State private var isShowingInfo: Bool = false
+    @State private var showingModelSelector = false
 
     @State private var selectedCameraType: CameraType = .continuous
     @State private var isEditingPrompt: Bool = false
@@ -39,11 +40,14 @@ struct ContentView: View {
     }
     
     var statusTextColor : Color {
-        return model.evaluationState == .processingPrompt ? .black : .white
+        return (modelManager.currentModel as? FastVLMModel)?.evaluationState == .processingPrompt ? .black : .white
     }
     
     var statusBackgroundColor : Color {
-        switch model.evaluationState {
+        guard let fastVLMModel = modelManager.currentModel as? FastVLMModel else {
+            return modelManager.running ? .green : .gray
+        }
+        switch fastVLMModel.evaluationState {
         case .idle:
             return .gray
         case .generatingResponse:
@@ -68,7 +72,7 @@ struct ContentView: View {
                         .pickerStyle(.segmented)
                         .onChange(of: selectedCameraType) { _, _ in
                             // Cancel any in-flight requests when switching modes
-                            model.cancel()
+                            modelManager.cancel()
                         }
 
                         if let framesToDisplay {
@@ -85,8 +89,8 @@ struct ContentView: View {
                                 .frame(maxWidth: 750)
                                 #endif
                                 .overlay(alignment: .top) {
-                                    if !model.promptTime.isEmpty {
-                                        Text("TTFT \(model.promptTime)")
+                                    if !modelManager.promptTime.isEmpty {
+                                        Text("TTFT \(modelManager.promptTime)")
                                             .font(.caption)
                                             .foregroundStyle(.white)
                                             .monospaced()
@@ -111,20 +115,20 @@ struct ContentView: View {
                                 .overlay(alignment: .bottom) {
                                     if selectedCameraType == .continuous {
                                         Group {
-                                            if model.evaluationState == .processingPrompt {
+                                            if let fastVLMModel = modelManager.currentModel as? FastVLMModel, fastVLMModel.evaluationState == .processingPrompt {
                                                 HStack {
                                                     ProgressView()
                                                         .tint(self.statusTextColor)
                                                         .controlSize(.small)
 
-                                                    Text(model.evaluationState.rawValue)
+                                                    Text(fastVLMModel.evaluationState.rawValue)
                                                 }
-                                            } else if model.evaluationState == .idle {
+                                            } else if let fastVLMModel = modelManager.currentModel as? FastVLMModel, fastVLMModel.evaluationState == .idle {
                                                 HStack(spacing: 6.0) {
                                                     Image(systemName: "clock.fill")
                                                         .font(.caption)
 
-                                                    Text(model.evaluationState.rawValue)
+                                                    Text(fastVLMModel.evaluationState.rawValue)
                                                 }
                                             }
                                             else {
@@ -134,7 +138,7 @@ struct ContentView: View {
                                                     Image(systemName: "lightbulb.fill")
                                                         .font(.caption)
 
-                                                    Text(model.evaluationState.rawValue)
+                                                    Text(modelManager.running ? "Generating Response" : "Idle")
                                                 }
                                             }
                                         }
@@ -163,13 +167,13 @@ struct ContentView: View {
                 promptSections
 
                 Section {
-                    if model.output.isEmpty && model.running {
+                    if modelManager.output.isEmpty && modelManager.running {
                         ProgressView()
                             .controlSize(.large)
                             .frame(maxWidth: .infinity)
                     } else {
                         ScrollView {
-                            Text(model.output)
+                            Text(modelManager.output)
                                 .foregroundStyle(isEditingPrompt ? .secondary : .primary)
                                 .textSelection(.enabled)
                                 #if os(macOS)
@@ -201,7 +205,7 @@ struct ContentView: View {
                 camera.start()
             }
             .task {
-                await model.load()
+                await modelManager.loadCurrentModel()
             }
 
             #if !os(macOS)
@@ -241,6 +245,20 @@ struct ContentView: View {
                     }
                 }
 
+                ToolbarItem(placement: .navigation) {
+                    Button {
+                        showingModelSelector.toggle()
+                    }
+                    label: {
+                        HStack {
+                            Image(systemName: "cpu")
+                            Text(modelManager.selectedModelType.rawValue)
+                                .font(.caption)
+                        }
+                    }
+                    .disabled(modelManager.isSwitchingModels || modelManager.running)
+                }
+
                 ToolbarItem(placement: .primaryAction) {
                     if isEditingPrompt {
                         Button {
@@ -276,6 +294,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $isShowingInfo) {
                 InfoView()
+            }
+            .sheet(isPresented: $showingModelSelector) {
+                modelSelectorSheet
             }
         }
     }
@@ -367,7 +388,7 @@ struct ContentView: View {
             )
             
             // generate output for a frame and wait for generation to complete
-            let t = await model.generate(userInput)
+            let t = await modelManager.generate(userInput)
             _ = await t.result
 
             do {
@@ -427,12 +448,12 @@ struct ContentView: View {
         }
     }
 
-    /// Perform FastVLM inference on a single frame.
+    /// Perform VLM inference on a single frame.
     /// - Parameter frame: The frame to analyze.
     func processSingleFrame(_ frame: CVImageBuffer) {
         // Reset Response UI (show spinner)
         Task { @MainActor in
-            model.output = ""
+            modelManager.currentModel.output = ""
         }
 
         // Construct request to model
@@ -441,9 +462,9 @@ struct ContentView: View {
             images: [.ciImage(CIImage(cvPixelBuffer: frame))]
         )
 
-        // Post request to FastVLM
+        // Post request to VLM
         Task {
-            await model.generate(userInput)
+            await modelManager.generate(userInput)
         }
     }
 }
@@ -451,3 +472,93 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+
+// MARK: - Model Selector Sheet
+    
+private extension ContentView {
+    var modelSelectorSheet: some View {
+        NavigationView {
+            List {
+                ForEach(ModelType.allCases, id: \.self) { modelType in
+                    Button(action: {
+                        Task {
+                            showingModelSelector = false
+                            await modelManager.switchModel(to: modelType)
+                        }
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(modelType.displayName)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text(modelDescription(for: modelType))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            
+                            Spacer()
+                            
+                            if modelType == modelManager.selectedModelType {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .disabled(modelManager.isSwitchingModels)
+                }
+                
+                if modelManager.isSwitchingModels {
+                    Section {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text(modelManager.switchingProgress)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 8)
+                    }
+                }
+                
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Current Model Info")
+                            .font(.headline)
+                        
+                        Text(modelManager.modelInfo.isEmpty ? "No model loaded" : modelManager.modelInfo)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        if !modelManager.promptTime.isEmpty {
+                            Text("Last Processing Time: \(modelManager.promptTime)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Select Model")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        showingModelSelector = false
+                    }
+                }
+            }
+        }
+    }
+    
+    func modelDescription(for modelType: ModelType) -> String {
+        switch modelType {
+        case .fastVLM:
+            return "Uses Core ML vision encoder with MLX language model. Optimized for real-time inference."
+        case .smolVLM:
+            return "Native MLX implementation of fine-tuned SmolVLM2. Better scene understanding for construction sites."
+        }
+    }
+}
+    // MARK: - Frame Processing
+

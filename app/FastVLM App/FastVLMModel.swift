@@ -13,7 +13,7 @@ import MLXVLM
 
 @Observable
 @MainActor
-class FastVLMModel {
+class FastVLMModel: VLMModelProtocol {
 
     public var running = false
     public var modelInfo = ""

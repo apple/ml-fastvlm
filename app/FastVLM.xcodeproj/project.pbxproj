@@ -13,12 +13,12 @@
 		019A3E202D78E74C0055F93B /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E1F2D78E74C0055F93B /* MLXVLM */; };
 		019A3E212D78E7530055F93B /* Video.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; };
 		019A3E222D78E7530055F93B /* Video.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2ACD4A002DFA0A960046911D /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = 2ACD49FF2DFA0A960046911D /* Transformers */; };
 		C3ED544E2D790860005E20B3 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED544D2D790860005E20B3 /* MLXLMCommon */; };
 		C3ED54502D790860005E20B3 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED544F2D790860005E20B3 /* MLXVLM */; };
 		C3ED54522D790860005E20B3 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54512D790860005E20B3 /* MLX */; };
 		C3ED54542D790860005E20B3 /* MLXNN in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54532D790860005E20B3 /* MLXNN */; };
 		C3ED54582D790A68005E20B3 /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54572D790A68005E20B3 /* MLXFast */; };
-		C3ED545B2D790AD6005E20B3 /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED545A2D790AD6005E20B3 /* Transformers */; };
 		C3ED55012D7A0A7A005E20B3 /* FastVLM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C39BB3E62D79082A005DB8FB /* FastVLM.framework */; };
 		C3ED55022D7A0A7A005E20B3 /* FastVLM.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C39BB3E62D79082A005DB8FB /* FastVLM.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -124,6 +124,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2ACD4A002DFA0A960046911D /* Transformers in Frameworks */,
 				019A3E1C2D78E73E0055F93B /* MLXLMCommon in Frameworks */,
 				019A3E212D78E7530055F93B /* Video.framework in Frameworks */,
 				C3ED55012D7A0A7A005E20B3 /* FastVLM.framework in Frameworks */,
@@ -144,7 +145,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C3ED545B2D790AD6005E20B3 /* Transformers in Frameworks */,
 				C3ED54522D790860005E20B3 /* MLX in Frameworks */,
 				C3ED54502D790860005E20B3 /* MLXVLM in Frameworks */,
 				C3ED54542D790860005E20B3 /* MLXNN in Frameworks */,
@@ -231,6 +231,7 @@
 				019A3E1B2D78E73E0055F93B /* MLXLMCommon */,
 				019A3E1D2D78E7470055F93B /* MLXRandom */,
 				019A3E1F2D78E74C0055F93B /* MLXVLM */,
+				2ACD49FF2DFA0A960046911D /* Transformers */,
 			);
 			productName = FastVLMCameraExample;
 			productReference = 019A3E0A2D78E6A00055F93B /* FastVLM App.app */;
@@ -282,7 +283,6 @@
 				C3ED54512D790860005E20B3 /* MLX */,
 				C3ED54532D790860005E20B3 /* MLXNN */,
 				C3ED54572D790A68005E20B3 /* MLXFast */,
-				C3ED545A2D790AD6005E20B3 /* Transformers */,
 			);
 			productName = FastVLM;
 			productReference = C39BB3E62D79082A005DB8FB /* FastVLM.framework */;
@@ -322,7 +322,7 @@
 			packageReferences = (
 				C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */,
 				C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */,
-				C3ED54592D790AC6005E20B3 /* XCRemoteSwiftPackageReference "swift-transformers" */,
+				2ACD49FE2DFA0A960046911D /* XCRemoteSwiftPackageReference "swift-transformers" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C35EDB702D076A5A00757E80 /* Products */;
@@ -434,13 +434,14 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "FastVLM App/FastVLM.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 0.1.0;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"FastVLM App/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = YP7ZT7DB7R;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -463,13 +464,15 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FastVLM App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = FastVLM;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Use camera to get live feed of images";
+				INFOPLIST_KEY_NSCameraUsageDescription = "FastVLM uses the camera to capture images for real-time AI analysis.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FastVLM needs access to your photo library to analyze selected images.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arm64;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
@@ -483,15 +486,17 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apple.ml.FastVLM;
+				PRODUCT_BUNDLE_IDENTIFIER = FastVLM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
 			name = Debug;
@@ -532,13 +537,14 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "FastVLM App/FastVLM.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 0.1.0;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"FastVLM App/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = YP7ZT7DB7R;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_PREVIEWS = YES;
@@ -555,13 +561,15 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FastVLM App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = FastVLM;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Use camera to get live feed of images";
+				INFOPLIST_KEY_NSCameraUsageDescription = "FastVLM uses the camera to capture images for real-time AI analysis.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FastVLM needs access to your photo library to analyze selected images.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arm64;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
@@ -574,14 +582,16 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apple.ml.FastVLM;
+				PRODUCT_BUNDLE_IDENTIFIER = FastVLM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
 			name = Release;
@@ -1086,12 +1096,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		2ACD49FE2DFA0A960046911D /* XCRemoteSwiftPackageReference "swift-transformers" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/huggingface/swift-transformers.git";
+			requirement = {
+				kind = revision;
+				revision = e38e8dbc35d60785603fe038a203009c7ae99e06;
+			};
+		};
 		C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ml-explore/mlx-swift-examples";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.21.2;
+				kind = revision;
+				revision = 983eaac1d20b5420a1b9ecd7122eaa5001549a4c;
 			};
 		};
 		C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */ = {
@@ -1100,14 +1118,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 0.21.2;
-			};
-		};
-		C3ED54592D790AC6005E20B3 /* XCRemoteSwiftPackageReference "swift-transformers" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/huggingface/swift-transformers";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.18;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1133,6 +1143,11 @@
 			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
 			productName = MLXVLM;
 		};
+		2ACD49FF2DFA0A960046911D /* Transformers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2ACD49FE2DFA0A960046911D /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Transformers;
+		};
 		C3ED544D2D790860005E20B3 /* MLXLMCommon */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
@@ -1157,11 +1172,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */;
 			productName = MLXFast;
-		};
-		C3ED545A2D790AD6005E20B3 /* Transformers */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C3ED54592D790AC6005E20B3 /* XCRemoteSwiftPackageReference "swift-transformers" */;
-			productName = Transformers;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
