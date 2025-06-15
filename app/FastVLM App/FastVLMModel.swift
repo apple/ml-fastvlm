@@ -28,13 +28,13 @@ class FastVLMModel: VLMModelProtocol {
     private let modelConfiguration = FastVLM.modelConfiguration
 
     /// parameters controlling the output
-    let generateParameters = GenerateParameters(temperature: 0.0)
-    let maxTokens = 240
+    let generateParameters = GenerateParameters(temperature: 0.1)
+    let maxTokens = 300
 
     /// update the display every N tokens -- 4 looks like it updates continuously
     /// and is low overhead.  observed ~15% reduction in tokens/s when updating
     /// on every token
-    let displayEveryNTokens = 4
+    let displayEveryNTokens = 2
 
     private var loadState = LoadState.idle
     private var currentTask: Task<Void, Never>?
@@ -54,8 +54,22 @@ class FastVLMModel: VLMModelProtocol {
     private func _load() async throws -> ModelContainer {
         switch loadState {
         case .idle:
-            // limit the buffer cache
-            MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
+            MLX.GPU.set(cacheLimit: 100 * 1024 * 1024) // 100MB cache limit (same as SmolVLM)
+
+            #if os(iOS) || os(macOS)
+            let maxMetalMemory: Int
+            #if os(macOS)
+            // Use same conservative memory strategy as SmolVLM for fair comparison
+            let totalMemory = ProcessInfo.processInfo.physicalMemory
+            let currentUsage = 1024 * 1024 * 1024 // 1GB current usage estimate
+            let availableMemory = totalMemory - currentUsage
+            maxMetalMemory = min(3 * 1024 * 1024 * 1024, Int(round(0.4 * Double(availableMemory)))) // Max #GB or 40% of available (same as SmolVLM)
+            #else
+            maxMetalMemory = min(3 * 1024 * 1024 * 1024, Int(round(0.7 * Double(os_proc_available_memory())))) // Max 2GB or 70% available
+            #endif
+            MLX.GPU.set(memoryLimit: maxMetalMemory, relaxed: true)
+            print("[FastVLM Debug] Set Metal memory limit to: \(maxMetalMemory / 1024 / 1024) MB (optimized for 8GB iOS device)")
+            #endif
 
             let modelContainer = try await VLMModelFactory.shared.loadContainer(
                 configuration: modelConfiguration
@@ -160,7 +174,14 @@ class FastVLMModel: VLMModelProtocol {
                 
                 // Check if task was cancelled before updating UI
                 if !Task.isCancelled {
-                    self.output = result.output
+                    print("[FastVLM Debug] === Generation Completed ===")
+                    print("[FastVLM Debug] Final output: '\(result.output)'")
+                    print("[FastVLM Debug] Tokens per second: \(result.tokensPerSecond)")
+                    
+                    Task { @MainActor in
+                        self.output = result.output
+                        self.promptTime += " | \(String(format: "%.1f", result.tokensPerSecond)) tok/s"
+                    }
                 }
 
             } catch {

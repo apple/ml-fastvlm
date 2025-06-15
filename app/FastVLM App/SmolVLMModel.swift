@@ -44,10 +44,10 @@ class SmolVLMModel: VLMModelProtocol {
     }
     
     /// parameters controlling the output
-    let maxTokens = 240
+    let maxTokens = 300
     
     /// update the display every N tokens
-    let displayEveryNTokens = 4
+    let displayEveryNTokens = 2
     
     private var loadState = LoadState.idle
     private var currentTask: Task<Void, Never>?
@@ -69,8 +69,8 @@ class SmolVLMModel: VLMModelProtocol {
         let photoUserPrompt = "Describe this image."
         let videoSystemPrompt = "Focus only on describing the key dramatic action or notable event occurring in this video segment. Skip general context or scene-setting details unless they are crucial to understanding the main action."
         let videoUserPrompt = "What is the main action or notable event happening in this segment? Describe it in one brief sentence."
-        let temperature: Float = 0.7
-        let topP: Float = 0.9
+        let temperature: Float = 0.6
+        let topP: Float = 0.85
     }
     
     private let configuration = SmolVLMConfiguration()
@@ -194,21 +194,21 @@ class SmolVLMModel: VLMModelProtocol {
                 throw SmolVLMError.configurationError("Model configuration not set up")
             }
             
-            // With 2.8GB already used, we need to be very careful with GPU memory
-            MLX.GPU.set(cacheLimit: 8 * 1024 * 1024) // 8MB cache limit (very conservative)
+            MLX.GPU.set(cacheLimit: 100 * 1024 * 1024) // 100MB cache limit (same as FastVLM)
             
             // Check available memory - only use os_proc_available_memory on supported platforms
             #if os(iOS) || os(macOS)
             let maxMetalMemory: Int
             #if os(macOS)
-            // Leave plenty of room for system and other apps
-            let availableMemory = ProcessInfo.processInfo.physicalMemory - 2800 * 1024 * 1024 // Subtract current usage
-            maxMetalMemory = min(800 * 1024 * 1024, Int(round(0.15 * Double(availableMemory)))) // Max 800MB or 15% of available
+            let totalMemory = ProcessInfo.processInfo.physicalMemory
+            let currentUsage = 1024 * 1024 * 1024 // 1GB current usage estimate
+            let availableMemory = totalMemory - currentUsage
+            maxMetalMemory = min(3 * 1024 * 1024 * 1024, Int(round(0.4 * Double(availableMemory)))) // Max 3GB or 40% of available (same as FastVLM)
             #else
-            maxMetalMemory = min(512 * 1024 * 1024, Int(round(0.3 * Double(os_proc_available_memory())))) // Max 512MB or 30% available
+            maxMetalMemory = min(3 * 1024 * 1024 * 1024, Int(round(0.7 * Double(os_proc_available_memory())))) // Max 2GB or 70% available
             #endif
             MLX.GPU.set(memoryLimit: maxMetalMemory, relaxed: true)
-            print("[SmolVLM Debug] Set Metal memory limit to: \(maxMetalMemory / 1024 / 1024) MB (relaxed mode)")
+            print("[SmolVLM Debug] Set Metal memory limit to: \(maxMetalMemory / 1024 / 1024) MB (optimized for 8GB iOS device)")
             #endif
             
             print("[SmolVLM Debug] Loading SmolVLM2 model from: \(modelConfiguration.name)")
@@ -347,13 +347,13 @@ class SmolVLMModel: VLMModelProtocol {
                         [
                             "role": "user",
                             "content": []
-                            + processedImages.map { _ in
-                                ["type": "image"]
-                            }
-                            + userInput.videos.map { _ in
-                                ["type": "video"]
-                            }
-                            + [["type": "text", "text": userPromptText]]
+                                + processedImages.map { _ in
+                                    ["type": "image"]
+                                }
+                                + userInput.videos.map { _ in
+                                    ["type": "video"]
+                                }
+                                + [["type": "text", "text": userPromptText]]
                         ]
                     ]
                     

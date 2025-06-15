@@ -44,7 +44,7 @@ public class CameraController: NSObject {
     private var rotationObservation: NSKeyValueObservation?
     
     private var lastFrameTime: CFAbsoluteTime = 0
-    private let frameThrottleInterval: CFAbsoluteTime = 1.0 / 30.0 // 30 FPS max
+    private let frameThrottleInterval: CFAbsoluteTime = 1.0 / 60.0
 
     public func attach(continuation: AsyncStream<CMSampleBuffer>.Continuation) {
         sessionQueue.async {
@@ -190,7 +190,7 @@ public class CameraController: NSObject {
 
         videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "sampleBufferQueue"))
         captureSession.addOutput(videoOutput)
-        captureSession.sessionPreset = AVCaptureSession.Preset.hd1920x1080
+        captureSession.sessionPreset = AVCaptureSession.Preset.hd4K3840x2160
 
         #if os(iOS)
         rotationCoordinator = AVCaptureDevice.RotationCoordinator(device: videoDevice, previewLayer: nil)
