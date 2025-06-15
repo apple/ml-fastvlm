@@ -77,11 +77,11 @@ class SmolVLMModel: VLMModelProtocol {
             // but override the model directory to point to our local SmolVLM model
             self.modelConfiguration = ModelConfiguration(directory: modelDir)
             
-            // Try to patch the model type in the config.json to use a supported type
+            // Try to patch the model configuration to use a supported type
             try patchModelConfiguration(modelDir: modelDir)
             
         } catch {
-            print("Failed to setup SmolVLM model configuration: \(error)")
+            print("[SmolVLM Debug] Failed to setup SmolVLM model configuration: \(error)")
             self.modelInfo = "Configuration Error: \(error.localizedDescription)"
         }
     }
@@ -99,15 +99,29 @@ class SmolVLMModel: VLMModelProtocol {
         
         // Check the current model type
         let currentModelType = config["model_type"] as? String ?? "unknown"
-        print("Current model type: \(currentModelType)")
+        print("[SmolVLM Debug] Current model type: \(currentModelType)")
         
         if currentModelType == "smolvlm" {
             // The model type should be supported according to VLMModelFactory
             // Let's try using it as-is first
-            print("Using SmolVLM model type as-is")
+            print("[SmolVLM Debug] Using SmolVLM model type as-is")
         } else {
-            print("Unexpected model type: \(currentModelType)")
+            print("[SmolVLM Debug] Unexpected model type: \(currentModelType)")
         }
+        
+        if let textConfig = config["text_config"] as? [String: Any] {
+            print("[SmolVLM Debug] Text config vocab_size: \(textConfig["vocab_size"] ?? "unknown")")
+            print("[SmolVLM Debug] Text config hidden_size: \(textConfig["hidden_size"] ?? "unknown")")
+            print("[SmolVLM Debug] Text config num_hidden_layers: \(textConfig["num_hidden_layers"] ?? "unknown")")
+        }
+        
+        if let visionConfig = config["vision_config"] as? [String: Any] {
+            print("[SmolVLM Debug] Vision config image_size: \(visionConfig["image_size"] ?? "unknown")")
+            print("[SmolVLM Debug] Vision config hidden_size: \(visionConfig["hidden_size"] ?? "unknown")")
+        }
+        
+        print("[SmolVLM Debug] Image token ID: \(config["image_token_id"] ?? "unknown")")
+        print("[SmolVLM Debug] Pad token ID: \(config["pad_token_id"] ?? "unknown")")
     }
     
     private func verifyModelBundle() throws -> URL {
@@ -123,25 +137,28 @@ class SmolVLMModel: VLMModelProtocol {
         
         let optionalFiles = [
             "preprocessor_config.json",
-            "processor_config.json"
+            "processor_config.json",
+            "tokenizer_config.json",
+            "special_tokens_map.json",
+            "merges.txt"
         ]
         
-        print("SmolVLM Model Directory: \(modelDir.path)")
-        print("Bundle identifier: \(Bundle.main.bundleIdentifier ?? "unknown")")
+        print("[SmolVLM Debug] SmolVLM Model Directory: \(modelDir.path)")
+        print("[SmolVLM Debug] Bundle identifier: \(Bundle.main.bundleIdentifier ?? "unknown")")
         
         // List all files in the SmolVLMModel directory
         do {
             let contents = try FileManager.default.contentsOfDirectory(at: modelDir, includingPropertiesForKeys: nil)
-            print("SmolVLMModel directory contents: \(contents.map { $0.lastPathComponent })")
+            print("[SmolVLM Debug] SmolVLMModel directory contents: \(contents.map { $0.lastPathComponent })")
         } catch {
-            print("Error listing SmolVLMModel directory contents: \(error)")
+            print("[SmolVLM Debug] Error listing SmolVLMModel directory contents: \(error)")
         }
         
         // Check required files
         for fileName in requiredFiles {
             let fileURL = modelDir.appendingPathComponent(fileName)
             let exists = FileManager.default.fileExists(atPath: fileURL.path)
-            print("\(fileName): \(exists ? "Found" : "Missing") at \(fileURL.path)")
+            print("[SmolVLM Debug] \(fileName): \(exists ? "Found" : "Missing") at \(fileURL.path)")
             
             if !exists {
                 throw SmolVLMError.configurationError("\(fileName) not found in SmolVLMModel bundle")
@@ -152,7 +169,7 @@ class SmolVLMModel: VLMModelProtocol {
         for fileName in optionalFiles {
             let fileURL = modelDir.appendingPathComponent(fileName)
             let exists = FileManager.default.fileExists(atPath: fileURL.path)
-            print("\(fileName): \(exists ? "Found" : "Optional file missing") at \(fileURL.path)")
+            print("[SmolVLM Debug] \(fileName): \(exists ? "Found" : "Optional file missing") at \(fileURL.path)")
         }
         
         return modelDir
@@ -179,9 +196,10 @@ class SmolVLMModel: VLMModelProtocol {
             maxMetalMemory = Int(round(0.82 * Double(os_proc_available_memory())))
             #endif
             MLX.GPU.set(memoryLimit: maxMetalMemory, relaxed: false)
+            print("[SmolVLM Debug] Set Metal memory limit to: \(maxMetalMemory / 1024 / 1024) MB")
             #endif
             
-            print("Loading SmolVLM2 model from: \(modelConfiguration.name)")
+            print("[SmolVLM Debug] Loading SmolVLM2 model from: \(modelConfiguration.name)")
             
             // Try loading without Hub API first (local directory approach)
             do {
@@ -193,17 +211,13 @@ class SmolVLMModel: VLMModelProtocol {
                     }
                 }
                 
-                // Get model info
-                let numParams = await modelContainer.perform { context in
-                    context.model.numParameters()
-                }
-                
-                self.modelInfo = "Loaded SmolVLM2 (\(numParams) parameters)"
+                self.modelInfo = "Loaded SmolVLM2"
                 loadState = .loaded(modelContainer)
+                print("[SmolVLM Debug] Model loaded successfully")
                 return modelContainer
                 
             } catch {
-                print("Failed to load SmolVLM with local directory approach: \(error)")
+                print("[SmolVLM Debug] Failed to load SmolVLM with local directory approach: \(error)")
                 throw SmolVLMError.configurationError("Failed to load SmolVLM model: \(error.localizedDescription)")
             }
             
@@ -217,7 +231,7 @@ class SmolVLMModel: VLMModelProtocol {
             _ = try await _load()
         } catch {
             self.modelInfo = "Error loading SmolVLM: \(error.localizedDescription)"
-            print("SmolVLM load error: \(error)")
+            print("[SmolVLM Debug] SmolVLM load error: \(error)")
         }
     }
     
@@ -249,18 +263,31 @@ class SmolVLMModel: VLMModelProtocol {
                 
                 let llmStart = Date()
                 
+                print("[SmolVLM Debug] === Generation Started ===")
+                print("[SmolVLM Debug] User prompt: \(userInput.prompt)")
+                print("[SmolVLM Debug] Number of images: \(userInput.images.count)")
+                
                 // Generate response using SmolVLM - same pattern as FastVLM
                 let result = try await modelContainer.perform { context in
+                    print("[SmolVLM Debug] Preparing input with processor...")
+                    
                     // Prepare the input using the model's processor
                     let input = try await context.processor.prepare(input: userInput)
                     
-                    var seenFirstToken = false
+                    print("[SmolVLM Debug] Input prepared successfully")
+                    print("[SmolVLM Debug] Input type: \(type(of: input))")
                     
-                    // Generate with proper parameters
+                    var seenFirstToken = false
+                    var generatedTokens: [Int] = []
+                    
+                    // Generate with proper parameters - ADD: More conservative parameters for debugging
                     let generationParameters = MLXLMCommon.GenerateParameters(
-                        temperature: 0.3,
-                        topP: 0.9
+                        temperature: 0.1,  // Lower temperature for more deterministic output
+                        topP: 0.95,        // Slightly higher top-p
+                        repetitionPenalty: 1.05  // Small repetition penalty
                     )
+                    
+                    print("[SmolVLM Debug] Generation parameters: temp=\(generationParameters.temperature ?? 0), topP=\(generationParameters.topP ?? 0)")
                     
                     return try MLXLMCommon.generate(
                         input: input,
@@ -272,6 +299,14 @@ class SmolVLMModel: VLMModelProtocol {
                             return .stop
                         }
                         
+                        let newTokens = Array(tokens.suffix(tokens.count - generatedTokens.count))
+                        if !newTokens.isEmpty {
+                            print("[SmolVLM Debug] New tokens: \(newTokens)")
+                            let newText = context.tokenizer.decode(tokens: newTokens)
+                            print("[SmolVLM Debug] New text: '\(newText)'")
+                        }
+                        generatedTokens = tokens
+                        
                         if !seenFirstToken {
                             seenFirstToken = true
                             
@@ -279,6 +314,8 @@ class SmolVLMModel: VLMModelProtocol {
                             // the processing state and start displaying the text
                             let llmDuration = Date().timeIntervalSince(llmStart)
                             let text = context.tokenizer.decode(tokens: tokens)
+                            print("[SmolVLM Debug] First token generated in \(Int(llmDuration * 1000)) ms")
+                            print("[SmolVLM Debug] Current text: '\(text)'")
                             Task { @MainActor in
                                 self.evaluationState = .generatingResponse
                                 self.output = text
@@ -296,7 +333,20 @@ class SmolVLMModel: VLMModelProtocol {
                             }
                         }
                         
+                        let currentText = context.tokenizer.decode(tokens: tokens)
+                        
+                        // Stop if generating repetitive content
+                        if currentText.count > 50 {
+                            let lastPart = String(currentText.suffix(20))
+                            let beforeLastPart = String(currentText.dropLast(20).suffix(20))
+                            if lastPart == beforeLastPart {
+                                print("[SmolVLM Debug] Detected repetitive pattern, stopping generation")
+                                return .stop
+                            }
+                        }
+                        
                         if tokens.count >= self.maxTokens {
+                            print("[SmolVLM Debug] Reached max tokens (\(self.maxTokens)), stopping")
                             return .stop
                         } else {
                             return .more
@@ -306,6 +356,10 @@ class SmolVLMModel: VLMModelProtocol {
                 
                 // Check if task was cancelled before updating UI
                 if !Task.isCancelled {
+                    print("[SmolVLM Debug] === Generation Completed ===")
+                    print("[SmolVLM Debug] Final output: '\(result.output)'")
+                    print("[SmolVLM Debug] Tokens per second: \(result.tokensPerSecond)")
+                    
                     Task { @MainActor in
                         self.output = result.output
                         self.promptTime += " | \(String(format: "%.1f", result.tokensPerSecond)) tok/s"
@@ -313,18 +367,21 @@ class SmolVLMModel: VLMModelProtocol {
                 }
                 
             } catch SmolVLMError.configurationError(let message) {
+                print("[SmolVLM Debug] Configuration error: \(message)")
                 if !Task.isCancelled {
                     Task { @MainActor in
                         self.output = "SmolVLM Configuration Error: \(message)\n\nNote: This only affects SmolVLM model. FastVLM model should still work normally."
                     }
                 }
             } catch SmolVLMError.imageProcessingError(let message) {
+                print("[SmolVLM Debug] Image processing error: \(message)")
                 if !Task.isCancelled {
                     Task { @MainActor in
                         self.output = "SmolVLM Image Processing Error: \(message)"
                     }
                 }
             } catch {
+                print("[SmolVLM Debug] Generation error: \(error)")
                 if !Task.isCancelled {
                     Task { @MainActor in
                         self.output = "SmolVLM Failed: \(error.localizedDescription)"
@@ -351,5 +408,6 @@ class SmolVLMModel: VLMModelProtocol {
         output = ""
         promptTime = ""
         evaluationState = .idle
+        print("[SmolVLM Debug] Generation cancelled")
     }
 }

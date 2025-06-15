@@ -17,7 +17,7 @@ extension CVImageBuffer: @unchecked @retroactive Sendable {}
 extension CMSampleBuffer: @unchecked @retroactive Sendable {}
 
 // delay between frames -- controls the frame rate of the updates
-let FRAME_DELAY = Duration.milliseconds(1)
+let FRAME_DELAY = Duration.seconds(15)
 
 struct ContentView: View {
     @State private var camera = CameraController()
@@ -35,6 +35,10 @@ struct ContentView: View {
     @State private var selectedCameraType: CameraType = .single
     @State private var isEditingPrompt: Bool = false
     
+    @State private var showingDebugView = false
+    
+    @State private var frameDistributionTask: Task<Void, Never>? = nil
+
     var statusTextColor: Color {
         guard let fastVLMModel = modelManager.currentModel as? FastVLMModel else {
             return .white
@@ -82,12 +86,16 @@ struct ContentView: View {
                 #if canImport(UIKit)
                 UIApplication.shared.isIdleTimerDisabled = false
                 #endif
+                frameDistributionTask?.cancel()
             }
             .task {
-                if Task.isCancelled {
-                    return
+                frameDistributionTask = Task {
+                    if Task.isCancelled {
+                        return
+                    }
+                    await distributeVideoFrames()
                 }
-                await distributeVideoFrames()
+                await frameDistributionTask?.value
             }
             .modifier(NavigationBarModifier(
                 modelManager: modelManager,
@@ -95,13 +103,17 @@ struct ContentView: View {
                 showingModelSelector: $showingModelSelector,
                 isShowingInfo: $isShowingInfo,
                 prompt: $prompt,
-                promptSuffix: $promptSuffix
+                promptSuffix: $promptSuffix,
+                showingDebugView: $showingDebugView
             ))
             .sheet(isPresented: $isShowingInfo) {
                 InfoView()
             }
             .sheet(isPresented: $showingModelSelector) {
                 modelSelectorSheet
+            }
+            .sheet(isPresented: $showingDebugView) {
+                DebugView(modelManager: modelManager)
             }
         }
     }
@@ -116,8 +128,21 @@ struct ContentView: View {
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
-                .onChange(of: selectedCameraType) { _, _ in
+                .onChange(of: selectedCameraType) { oldValue, newValue in
+                    print("[ContentView] Camera type changed from \(oldValue.rawValue) to \(newValue.rawValue)")
+                    
+                    // Cancel current model generation
                     modelManager.cancel()
+                    
+                    // Cancel and restart frame distribution
+                    frameDistributionTask?.cancel()
+                    frameDistributionTask = Task {
+                        // Small delay to ensure clean transition
+                        try? await Task.sleep(for: .milliseconds(100))
+                        if !Task.isCancelled {
+                            await distributeVideoFrames()
+                        }
+                    }
                 }
 
                 if let framesToDisplay {
@@ -216,7 +241,7 @@ struct ContentView: View {
     
     @ViewBuilder
     private var statusIndicatorView: some View {
-        if let fastVLMModel = modelManager.currentModel as? FastVLMModel, 
+        if let fastVLMModel = modelManager.currentModel as? FastVLMModel,
            fastVLMModel.evaluationState == .processingPrompt {
             HStack {
                 ProgressView()
@@ -224,7 +249,7 @@ struct ContentView: View {
                     .controlSize(.small)
                 Text(fastVLMModel.evaluationState.rawValue)
             }
-        } else if let fastVLMModel = modelManager.currentModel as? FastVLMModel, 
+        } else if let fastVLMModel = modelManager.currentModel as? FastVLMModel,
                   fastVLMModel.evaluationState == .idle {
             HStack(spacing: 6.0) {
                 Image(systemName: "clock.fill")
@@ -284,7 +309,40 @@ struct ContentView: View {
     }
 
     func analyzeVideoFrames(_ frames: AsyncStream<CVImageBuffer>) async {
+        // Only run analysis in continuous mode
+        let currentCameraType = await MainActor.run { selectedCameraType }
+        if currentCameraType != .continuous {
+            print("[ContentView] Not in continuous mode, skipping analysis")
+            return
+        }
+        
+        print("[ContentView] Starting continuous analysis...")
+        var frameCount = 0
+        
         for await frame in frames {
+            if Task.isCancelled {
+                print("[ContentView] Continuous analysis cancelled")
+                break
+            }
+            
+            // Double-check we're still in continuous mode
+            let stillContinuous = await MainActor.run { selectedCameraType == .continuous }
+            if !stillContinuous {
+                print("[ContentView] No longer in continuous mode, stopping analysis")
+                break
+            }
+            
+            frameCount += 1
+            print("[ContentView] Processing frame \(frameCount) in continuous mode")
+            
+            if modelManager.running {
+                print("[ContentView] Model is busy, skipping frame \(frameCount)")
+                // Skip this frame if model is still processing
+                continue
+            }
+            
+            print("[ContentView] Starting inference for frame \(frameCount)")
+            
             let userInput = UserInput(
                 prompt: .text("\(prompt) \(promptSuffix)"),
                 images: [.ciImage(CIImage(cvPixelBuffer: frame))]
@@ -293,14 +351,23 @@ struct ContentView: View {
             // generate output for a frame and wait for generation to complete
             let t = await modelManager.generate(userInput)
             _ = await t.result
+            
+            print("[ContentView] Completed inference for frame \(frameCount), waiting 15 seconds...")
 
             do {
                 try await Task.sleep(for: FRAME_DELAY)
-            } catch { return }
+            } catch {
+                print("[ContentView] Continuous analysis sleep cancelled")
+                break
+            }
         }
+        
+        print("[ContentView] Continuous analysis ended")
     }
 
     func distributeVideoFrames() async {
+        print("[ContentView] Starting distributeVideoFrames for camera type: \(selectedCameraType.rawValue)")
+        
         // attach a stream to the camera -- this code will read this
         let frames = AsyncStream<CMSampleBuffer>(bufferingPolicy: .bufferingNewest(1)) {
             camera.attach(continuation: $0)
@@ -310,7 +377,11 @@ struct ContentView: View {
             of: CVImageBuffer.self,
             bufferingPolicy: .bufferingNewest(1)
         )
-        self.framesToDisplay = framesToDisplay
+        
+        // Update UI on main actor
+        await MainActor.run {
+            self.framesToDisplay = framesToDisplay
+        }
 
         // Only create analysis stream if in continuous mode
         let (framesToAnalyze, framesToAnalyzeContinuation) = AsyncStream.makeStream(
@@ -320,35 +391,52 @@ struct ContentView: View {
 
         // set up structured tasks (important -- this means the child tasks
         // are cancelled when the parent is cancelled)
-        async let distributeFrames: () = {
-            for await sampleBuffer in frames {
-                if let frame = sampleBuffer.imageBuffer {
-                    framesToDisplayContinuation.yield(frame)
-                    // Only send frames for analysis in continuous mode
-                    if await selectedCameraType == .continuous {
-                        framesToAnalyzeContinuation.yield(frame)
+        await withTaskGroup(of: Void.self) { group in
+            // Task 1: Distribute frames to display and analysis
+            group.addTask {
+                defer {
+                    framesToDisplayContinuation.finish()
+                    framesToAnalyzeContinuation.finish()
+                }
+                
+                for await sampleBuffer in frames {
+                    if Task.isCancelled {
+                        print("[ContentView] Frame distribution cancelled")
+                        break
+                    }
+                    
+                    if let frame = sampleBuffer.imageBuffer {
+                        framesToDisplayContinuation.yield(frame)
+                        
+                        // Only send frames for analysis in continuous mode and check current camera type
+                        let currentCameraType = await MainActor.run { selectedCameraType }
+                        let isModelRunning = await MainActor.run { modelManager.running }
+                        
+                        if currentCameraType == .continuous && !isModelRunning {
+                            framesToAnalyzeContinuation.yield(frame)
+                        }
                     }
                 }
+                
+                print("[ContentView] Frame distribution ended")
             }
-
-            // detach from the camera controller and feed to the video view
-            await MainActor.run {
-                self.framesToDisplay = nil
-                self.camera.detatch()
+            
+            // Task 2: Analyze frames (only in continuous mode)
+            group.addTask {
+                await analyzeVideoFrames(framesToAnalyze)
             }
-
-            framesToDisplayContinuation.finish()
-            framesToAnalyzeContinuation.finish()
-        }()
-
-        // Only analyze frames if in continuous mode
-        if selectedCameraType == .continuous {
-            async let analyze: () = analyzeVideoFrames(framesToAnalyze)
-            await distributeFrames
-            await analyze
-        } else {
-            await distributeFrames
+            
+            // Wait for all tasks to complete or be cancelled
+            await group.waitForAll()
         }
+
+        // Clean up when done
+        await MainActor.run {
+            self.framesToDisplay = nil
+            self.camera.detatch()
+        }
+        
+        print("[ContentView] distributeVideoFrames completed")
     }
 
     /// Perform VLM inference on a single frame.
@@ -381,6 +469,7 @@ struct NavigationBarModifier: ViewModifier {
     @Binding var isShowingInfo: Bool
     @Binding var prompt: String
     @Binding var promptSuffix: String
+    @Binding var showingDebugView: Bool
     
     func body(content: Content) -> some View {
         content
@@ -406,18 +495,35 @@ struct NavigationBarModifier: ViewModifier {
 
                 #if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        isShowingInfo.toggle()
-                    } label: {
-                        Image(systemName: "info.circle")
+                    HStack {
+                        Button {
+                            isShowingInfo.toggle()
+                        } label: {
+                            Image(systemName: "info.circle")
+                        }
+
+                        
+                        Button {
+                            showingDebugView.toggle()
+                        } label: {
+                            Image(systemName: "ladybug")
+                        }
                     }
                 }
                 #else
                 ToolbarItem(placement: .navigation) {
-                    Button {
-                        isShowingInfo.toggle()
-                    } label: {
-                        Image(systemName: "info.circle")
+                    HStack {
+                        Button {
+                            isShowingInfo.toggle()
+                        } label: {
+                            Image(systemName: "info.circle")
+                        }
+                        
+                        Button {
+                            showingDebugView.toggle()
+                        } label: {
+                            Image(systemName: "ladybug")
+                        }
                     }
                 }
                 #endif
@@ -447,8 +553,8 @@ struct NavigationBarModifier: ViewModifier {
                             Button("Customize...") {
                                 isEditingPrompt.toggle()
                             }
-                        } label: { 
-                            Text("Prompts") 
+                        } label: {
+                            Text("Prompts")
                         }
                     }
                 }
@@ -542,7 +648,7 @@ private extension ContentView {
         case .fastVLM:
             return "Uses Core ML vision encoder with MLX language model. Optimized for real-time inference."
         case .smolVLM:
-            return "Native MLX implementation of fine-tuned SmolVLM2. Better scene understanding for construction sites."
+            return "Default model: MLX conversion of SmolVLM2. Better scene understanding with improved preprocessing."
         }
     }
 }

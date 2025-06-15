@@ -11,6 +11,9 @@
 		019A3E1E2D78E7470055F93B /* MLXRandom in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E1D2D78E7470055F93B /* MLXRandom */; };
 		019A3E212D78E7530055F93B /* Video.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; platformFilters = (ios, macos, ); };
 		019A3E222D78E7530055F93B /* Video.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; platformFilters = (ios, macos, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2A1AFCD92DFF4B6E000D918C /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B32DFF107700B09C65 /* MLXEmbedders */; };
+		2A1AFCDA2DFF4B6E000D918C /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B52DFF107700B09C65 /* MLXLLM */; };
+		2A1AFCDB2DFF4B6E000D918C /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B92DFF107700B09C65 /* MLXMNIST */; };
 		2AB088A72DFF0EAC00B09C65 /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088A62DFF0EAC00B09C65 /* Transformers */; };
 		2AB088AA2DFF0F0D00B09C65 /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088A92DFF0F0D00B09C65 /* MLXEmbedders */; settings = {ATTRIBUTES = (Required, ); }; };
 		2AB088AC2DFF0F0D00B09C65 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088AB2DFF0F0D00B09C65 /* MLXLLM */; };
@@ -154,6 +157,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A1AFCDB2DFF4B6E000D918C /* MLXMNIST in Frameworks */,
+				2A1AFCDA2DFF4B6E000D918C /* MLXLLM in Frameworks */,
+				2A1AFCD92DFF4B6E000D918C /* MLXEmbedders in Frameworks */,
 				C3ED54522D790860005E20B3 /* MLX in Frameworks */,
 				C3ED54542D790860005E20B3 /* MLXNN in Frameworks */,
 				2AB088B82DFF107700B09C65 /* MLXLMCommon in Frameworks */,
@@ -504,7 +510,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -602,7 +608,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -697,7 +703,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -792,7 +798,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -965,7 +971,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -1060,7 +1066,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
