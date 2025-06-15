@@ -8,14 +8,20 @@
 
 /* Begin PBXBuildFile section */
 		019A3E1A2D78E7370055F93B /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E192D78E7370055F93B /* MLX */; };
-		019A3E1C2D78E73E0055F93B /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E1B2D78E73E0055F93B /* MLXLMCommon */; };
 		019A3E1E2D78E7470055F93B /* MLXRandom in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E1D2D78E7470055F93B /* MLXRandom */; };
-		019A3E202D78E74C0055F93B /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E1F2D78E74C0055F93B /* MLXVLM */; };
 		019A3E212D78E7530055F93B /* Video.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; };
 		019A3E222D78E7530055F93B /* Video.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		2ACD4A002DFA0A960046911D /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = 2ACD49FF2DFA0A960046911D /* Transformers */; };
-		C3ED544E2D790860005E20B3 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED544D2D790860005E20B3 /* MLXLMCommon */; };
-		C3ED54502D790860005E20B3 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED544F2D790860005E20B3 /* MLXVLM */; };
+		2AB088A72DFF0EAC00B09C65 /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088A62DFF0EAC00B09C65 /* Transformers */; };
+		2AB088AA2DFF0F0D00B09C65 /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088A92DFF0F0D00B09C65 /* MLXEmbedders */; };
+		2AB088AC2DFF0F0D00B09C65 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088AB2DFF0F0D00B09C65 /* MLXLLM */; };
+		2AB088AE2DFF0F0D00B09C65 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088AD2DFF0F0D00B09C65 /* MLXLMCommon */; };
+		2AB088B02DFF0F0D00B09C65 /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088AF2DFF0F0D00B09C65 /* MLXMNIST */; };
+		2AB088B22DFF0F0D00B09C65 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B12DFF0F0D00B09C65 /* MLXVLM */; };
+		2AB088B42DFF107700B09C65 /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B32DFF107700B09C65 /* MLXEmbedders */; };
+		2AB088B62DFF107700B09C65 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B52DFF107700B09C65 /* MLXLLM */; };
+		2AB088B82DFF107700B09C65 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B72DFF107700B09C65 /* MLXLMCommon */; };
+		2AB088BA2DFF107700B09C65 /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B92DFF107700B09C65 /* MLXMNIST */; };
+		2AB088BC2DFF107700B09C65 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088BB2DFF107700B09C65 /* MLXVLM */; };
 		C3ED54522D790860005E20B3 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54512D790860005E20B3 /* MLX */; };
 		C3ED54542D790860005E20B3 /* MLXNN in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54532D790860005E20B3 /* MLXNN */; };
 		C3ED54582D790A68005E20B3 /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54572D790A68005E20B3 /* MLXFast */; };
@@ -93,6 +99,9 @@
 			exceptions = (
 				120A44852D9B05A900E244A3 /* Exceptions for "FastVLM App" folder in "FastVLM App" target */,
 			);
+			explicitFolders = (
+				Models/SmolVLMModel,
+			);
 			path = "FastVLM App";
 			sourceTree = "<group>";
 		};
@@ -124,12 +133,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2ACD4A002DFA0A960046911D /* Transformers in Frameworks */,
-				019A3E1C2D78E73E0055F93B /* MLXLMCommon in Frameworks */,
+				2AB088B22DFF0F0D00B09C65 /* MLXVLM in Frameworks */,
+				2AB088B02DFF0F0D00B09C65 /* MLXMNIST in Frameworks */,
+				2AB088AC2DFF0F0D00B09C65 /* MLXLLM in Frameworks */,
+				2AB088A72DFF0EAC00B09C65 /* Transformers in Frameworks */,
 				019A3E212D78E7530055F93B /* Video.framework in Frameworks */,
+				2AB088AA2DFF0F0D00B09C65 /* MLXEmbedders in Frameworks */,
 				C3ED55012D7A0A7A005E20B3 /* FastVLM.framework in Frameworks */,
 				019A3E1E2D78E7470055F93B /* MLXRandom in Frameworks */,
-				019A3E202D78E74C0055F93B /* MLXVLM in Frameworks */,
+				2AB088AE2DFF0F0D00B09C65 /* MLXLMCommon in Frameworks */,
 				019A3E1A2D78E7370055F93B /* MLX in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -145,11 +157,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2AB088BA2DFF107700B09C65 /* MLXMNIST in Frameworks */,
+				2AB088B62DFF107700B09C65 /* MLXLLM in Frameworks */,
+				2AB088B42DFF107700B09C65 /* MLXEmbedders in Frameworks */,
 				C3ED54522D790860005E20B3 /* MLX in Frameworks */,
-				C3ED54502D790860005E20B3 /* MLXVLM in Frameworks */,
 				C3ED54542D790860005E20B3 /* MLXNN in Frameworks */,
+				2AB088B82DFF107700B09C65 /* MLXLMCommon in Frameworks */,
+				2AB088BC2DFF107700B09C65 /* MLXVLM in Frameworks */,
 				C3ED54582D790A68005E20B3 /* MLXFast in Frameworks */,
-				C3ED544E2D790860005E20B3 /* MLXLMCommon in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,10 +243,13 @@
 			name = "FastVLM App";
 			packageProductDependencies = (
 				019A3E192D78E7370055F93B /* MLX */,
-				019A3E1B2D78E73E0055F93B /* MLXLMCommon */,
 				019A3E1D2D78E7470055F93B /* MLXRandom */,
-				019A3E1F2D78E74C0055F93B /* MLXVLM */,
-				2ACD49FF2DFA0A960046911D /* Transformers */,
+				2AB088A62DFF0EAC00B09C65 /* Transformers */,
+				2AB088A92DFF0F0D00B09C65 /* MLXEmbedders */,
+				2AB088AB2DFF0F0D00B09C65 /* MLXLLM */,
+				2AB088AD2DFF0F0D00B09C65 /* MLXLMCommon */,
+				2AB088AF2DFF0F0D00B09C65 /* MLXMNIST */,
+				2AB088B12DFF0F0D00B09C65 /* MLXVLM */,
 			);
 			productName = FastVLMCameraExample;
 			productReference = 019A3E0A2D78E6A00055F93B /* FastVLM App.app */;
@@ -278,11 +296,14 @@
 			);
 			name = FastVLM;
 			packageProductDependencies = (
-				C3ED544D2D790860005E20B3 /* MLXLMCommon */,
-				C3ED544F2D790860005E20B3 /* MLXVLM */,
 				C3ED54512D790860005E20B3 /* MLX */,
 				C3ED54532D790860005E20B3 /* MLXNN */,
 				C3ED54572D790A68005E20B3 /* MLXFast */,
+				2AB088B32DFF107700B09C65 /* MLXEmbedders */,
+				2AB088B52DFF107700B09C65 /* MLXLLM */,
+				2AB088B72DFF107700B09C65 /* MLXLMCommon */,
+				2AB088B92DFF107700B09C65 /* MLXMNIST */,
+				2AB088BB2DFF107700B09C65 /* MLXVLM */,
 			);
 			productName = FastVLM;
 			productReference = C39BB3E62D79082A005DB8FB /* FastVLM.framework */;
@@ -320,9 +341,9 @@
 			mainGroup = C35EDB632D07699400757E80;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */,
 				C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */,
-				2ACD49FE2DFA0A960046911D /* XCRemoteSwiftPackageReference "swift-transformers" */,
+				2AB088A52DFF0EAC00B09C65 /* XCRemoteSwiftPackageReference "swift-transformers" */,
+				2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C35EDB702D076A5A00757E80 /* Products */;
@@ -1064,7 +1085,7 @@
 				019A3E172D78E6A20055F93B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		C35372BA2D08C32D00474D34 /* Build configuration list for PBXNativeTarget "Video" */ = {
 			isa = XCConfigurationList;
@@ -1073,7 +1094,7 @@
 				C35372B82D08C32D00474D34 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		C35EDB672D07699400757E80 /* Build configuration list for PBXProject "FastVLM" */ = {
 			isa = XCConfigurationList;
@@ -1082,7 +1103,7 @@
 				C35EDB692D07699400757E80 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		C39BB3FF2D79082A005DB8FB /* Build configuration list for PBXNativeTarget "FastVLM" */ = {
 			isa = XCConfigurationList;
@@ -1091,25 +1112,25 @@
 				C39BB3FC2D79082A005DB8FB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2ACD49FE2DFA0A960046911D /* XCRemoteSwiftPackageReference "swift-transformers" */ = {
+		2AB088A52DFF0EAC00B09C65 /* XCRemoteSwiftPackageReference "swift-transformers" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/huggingface/swift-transformers.git";
 			requirement = {
-				kind = revision;
-				revision = e38e8dbc35d60785603fe038a203009c7ae99e06;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.21;
 			};
 		};
-		C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */ = {
+		2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ml-explore/mlx-swift-examples";
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-examples.git";
 			requirement = {
-				kind = revision;
-				revision = 983eaac1d20b5420a1b9ecd7122eaa5001549a4c;
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.25.4;
 			};
 		};
 		C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */ = {
@@ -1128,34 +1149,64 @@
 			package = C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */;
 			productName = MLX;
 		};
-		019A3E1B2D78E73E0055F93B /* MLXLMCommon */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
-			productName = MLXLMCommon;
-		};
 		019A3E1D2D78E7470055F93B /* MLXRandom */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */;
 			productName = MLXRandom;
 		};
-		019A3E1F2D78E74C0055F93B /* MLXVLM */ = {
+		2AB088A62DFF0EAC00B09C65 /* Transformers */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
-			productName = MLXVLM;
-		};
-		2ACD49FF2DFA0A960046911D /* Transformers */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2ACD49FE2DFA0A960046911D /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			package = 2AB088A52DFF0EAC00B09C65 /* XCRemoteSwiftPackageReference "swift-transformers" */;
 			productName = Transformers;
 		};
-		C3ED544D2D790860005E20B3 /* MLXLMCommon */ = {
+		2AB088A92DFF0F0D00B09C65 /* MLXEmbedders */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXEmbedders;
+		};
+		2AB088AB2DFF0F0D00B09C65 /* MLXLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXLLM;
+		};
+		2AB088AD2DFF0F0D00B09C65 /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
 			productName = MLXLMCommon;
 		};
-		C3ED544F2D790860005E20B3 /* MLXVLM */ = {
+		2AB088AF2DFF0F0D00B09C65 /* MLXMNIST */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXMNIST;
+		};
+		2AB088B12DFF0F0D00B09C65 /* MLXVLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXVLM;
+		};
+		2AB088B32DFF107700B09C65 /* MLXEmbedders */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXEmbedders;
+		};
+		2AB088B52DFF107700B09C65 /* MLXLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXLLM;
+		};
+		2AB088B72DFF107700B09C65 /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXLMCommon;
+		};
+		2AB088B92DFF107700B09C65 /* MLXMNIST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXMNIST;
+		};
+		2AB088BB2DFF107700B09C65 /* MLXVLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2AB088A82DFF0F0D00B09C65 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
 			productName = MLXVLM;
 		};
 		C3ED54512D790860005E20B3 /* MLX */ = {
