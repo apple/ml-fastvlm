@@ -8,6 +8,14 @@ import SwiftUI
 import MLXLMCommon
 import Foundation
 
+#if canImport(UIKit)
+import UIKit
+typealias PlatformImage = UIImage
+#elseif canImport(AppKit)
+import AppKit
+typealias PlatformImage = NSImage
+#endif
+
 struct EnhancedContentView: View {
     @State private var modelManager = ModelManager()
     @State private var selectedImages: [PhotosPickerItem] = []
@@ -68,7 +76,7 @@ struct EnhancedContentView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(Color(.systemGray6))
+                .background(Color(red: 0.95, green: 0.95, blue: 0.97))
                 .cornerRadius(8)
             }
             .disabled(modelManager.isSwitchingModels || modelManager.running)
@@ -152,10 +160,21 @@ struct EnhancedContentView: View {
     
     private func processSelectedImages(_ items: [PhotosPickerItem]) async {
         for item in items {
-            if let data = try? await item.loadTransferable(type: Data.self),
-               let uiImage = UIImage(data: data),
-               let ciImage = CIImage(image: uiImage) {
-                userInput.images.append(.ciImage(ciImage))
+            if let data = try? await item.loadTransferable(type: Data.self) {
+                #if canImport(UIKit)
+                if let uiImage = UIImage(data: data),
+                   let ciImage = CIImage(image: uiImage) {
+                    userInput.images.append(.ciImage(ciImage))
+                }
+                #elseif canImport(AppKit)
+                if let nsImage = NSImage(data: data) {
+                    // Convert NSImage to CIImage
+                    if let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                        let ciImage = CIImage(cgImage: cgImage)
+                        userInput.images.append(.ciImage(ciImage))
+                    }
+                }
+                #endif
             }
         }
         selectedImages.removeAll()
@@ -165,11 +184,17 @@ struct EnhancedContentView: View {
         Group {
             switch vlmImage {
             case .ciImage(let ciImage):
-                // Convert CIImage to UIImage for display
+                // Convert CIImage to platform image for display
                 if let cgImage = CIContext().createCGImage(ciImage, from: ciImage.extent) {
+                    #if canImport(UIKit)
                     Image(uiImage: UIImage(cgImage: cgImage))
                         .resizable()
                         .aspectRatio(contentMode: .fill)
+                    #elseif canImport(AppKit)
+                    Image(nsImage: NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height)))
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                    #endif
                 } else {
                     // Fallback if conversion fails
                     Rectangle()
@@ -255,7 +280,7 @@ struct EnhancedContentView: View {
                 Text(modelManager.output.isEmpty ? "Output will appear here..." : modelManager.output)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(Color(red: 0.95, green: 0.95, blue: 0.97))
                     .cornerRadius(8)
             }
             .frame(minHeight: 100, maxHeight: 200)
@@ -295,6 +320,7 @@ struct EnhancedContentView: View {
                 }
             }
             .navigationTitle("Select Model")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -303,6 +329,15 @@ struct EnhancedContentView: View {
                     }
                 }
             }
+            #else
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Done") {
+                        showingModelSelector = false
+                    }
+                }
+            }
+            #endif
         }
     }
     

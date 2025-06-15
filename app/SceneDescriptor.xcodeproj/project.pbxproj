@@ -9,24 +9,21 @@
 /* Begin PBXBuildFile section */
 		019A3E1A2D78E7370055F93B /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E192D78E7370055F93B /* MLX */; };
 		019A3E1E2D78E7470055F93B /* MLXRandom in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E1D2D78E7470055F93B /* MLXRandom */; };
-		019A3E212D78E7530055F93B /* Video.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; };
-		019A3E222D78E7530055F93B /* Video.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		019A3E212D78E7530055F93B /* Video.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; platformFilters = (ios, macos, ); };
+		019A3E222D78E7530055F93B /* Video.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; platformFilters = (ios, macos, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2AB088A72DFF0EAC00B09C65 /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088A62DFF0EAC00B09C65 /* Transformers */; };
-		2AB088AA2DFF0F0D00B09C65 /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088A92DFF0F0D00B09C65 /* MLXEmbedders */; };
+		2AB088AA2DFF0F0D00B09C65 /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088A92DFF0F0D00B09C65 /* MLXEmbedders */; settings = {ATTRIBUTES = (Required, ); }; };
 		2AB088AC2DFF0F0D00B09C65 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088AB2DFF0F0D00B09C65 /* MLXLLM */; };
 		2AB088AE2DFF0F0D00B09C65 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088AD2DFF0F0D00B09C65 /* MLXLMCommon */; };
 		2AB088B02DFF0F0D00B09C65 /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088AF2DFF0F0D00B09C65 /* MLXMNIST */; };
 		2AB088B22DFF0F0D00B09C65 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B12DFF0F0D00B09C65 /* MLXVLM */; };
-		2AB088B42DFF107700B09C65 /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B32DFF107700B09C65 /* MLXEmbedders */; };
-		2AB088B62DFF107700B09C65 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B52DFF107700B09C65 /* MLXLLM */; };
 		2AB088B82DFF107700B09C65 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B72DFF107700B09C65 /* MLXLMCommon */; };
-		2AB088BA2DFF107700B09C65 /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088B92DFF107700B09C65 /* MLXMNIST */; };
 		2AB088BC2DFF107700B09C65 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB088BB2DFF107700B09C65 /* MLXVLM */; };
 		C3ED54522D790860005E20B3 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54512D790860005E20B3 /* MLX */; };
 		C3ED54542D790860005E20B3 /* MLXNN in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54532D790860005E20B3 /* MLXNN */; };
 		C3ED54582D790A68005E20B3 /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54572D790A68005E20B3 /* MLXFast */; };
-		C3ED55012D7A0A7A005E20B3 /* FastVLM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C39BB3E62D79082A005DB8FB /* FastVLM.framework */; };
-		C3ED55022D7A0A7A005E20B3 /* FastVLM.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C39BB3E62D79082A005DB8FB /* FastVLM.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C3ED55012D7A0A7A005E20B3 /* FastVLM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C39BB3E62D79082A005DB8FB /* FastVLM.framework */; platformFilters = (ios, macos, ); };
+		C3ED55022D7A0A7A005E20B3 /* FastVLM.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C39BB3E62D79082A005DB8FB /* FastVLM.framework */; platformFilters = (ios, macos, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,7 +59,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		019A3E0A2D78E6A00055F93B /* FastVLM App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FastVLM App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		019A3E0A2D78E6A00055F93B /* SceneDescriptor App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SceneDescriptor App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		12FFAF3D2DC93583009C4EFA /* get_pretrained_mlx_model.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = get_pretrained_mlx_model.sh; sourceTree = "<group>"; };
 		12FFAF3E2DC93583009C4EFA /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		C35372AE2D08C32D00474D34 /* Video.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Video.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -70,12 +67,12 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		120A44852D9B05A900E244A3 /* Exceptions for "FastVLM App" folder in "FastVLM App" target */ = {
+		120A44852D9B05A900E244A3 /* Exceptions for "FastVLM App" folder in "SceneDescriptor App" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 019A3E092D78E6A00055F93B /* FastVLM App */;
+			target = 019A3E092D78E6A00055F93B /* SceneDescriptor App */;
 		};
 		C35372B92D08C32D00474D34 /* Exceptions for "Video" folder in "Video" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -97,7 +94,7 @@
 		019A3E0B2D78E6A00055F93B /* FastVLM App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				120A44852D9B05A900E244A3 /* Exceptions for "FastVLM App" folder in "FastVLM App" target */,
+				120A44852D9B05A900E244A3 /* Exceptions for "FastVLM App" folder in "SceneDescriptor App" target */,
 			);
 			explicitFolders = (
 				Models/SmolVLMModel,
@@ -157,9 +154,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2AB088BA2DFF107700B09C65 /* MLXMNIST in Frameworks */,
-				2AB088B62DFF107700B09C65 /* MLXLLM in Frameworks */,
-				2AB088B42DFF107700B09C65 /* MLXEmbedders in Frameworks */,
 				C3ED54522D790860005E20B3 /* MLX in Frameworks */,
 				C3ED54542D790860005E20B3 /* MLXNN in Frameworks */,
 				2AB088B82DFF107700B09C65 /* MLXLMCommon in Frameworks */,
@@ -189,7 +183,7 @@
 			isa = PBXGroup;
 			children = (
 				C35372AE2D08C32D00474D34 /* Video.framework */,
-				019A3E0A2D78E6A00055F93B /* FastVLM App.app */,
+				019A3E0A2D78E6A00055F93B /* SceneDescriptor App.app */,
 				C39BB3E62D79082A005DB8FB /* FastVLM.framework */,
 			);
 			name = Products;
@@ -222,9 +216,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		019A3E092D78E6A00055F93B /* FastVLM App */ = {
+		019A3E092D78E6A00055F93B /* SceneDescriptor App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 019A3E182D78E6A20055F93B /* Build configuration list for PBXNativeTarget "FastVLM App" */;
+			buildConfigurationList = 019A3E182D78E6A20055F93B /* Build configuration list for PBXNativeTarget "SceneDescriptor App" */;
 			buildPhases = (
 				019A3E062D78E6A00055F93B /* Sources */,
 				019A3E072D78E6A00055F93B /* Frameworks */,
@@ -240,7 +234,7 @@
 			fileSystemSynchronizedGroups = (
 				019A3E0B2D78E6A00055F93B /* FastVLM App */,
 			);
-			name = "FastVLM App";
+			name = "SceneDescriptor App";
 			packageProductDependencies = (
 				019A3E192D78E7370055F93B /* MLX */,
 				019A3E1D2D78E7470055F93B /* MLXRandom */,
@@ -252,7 +246,7 @@
 				2AB088B12DFF0F0D00B09C65 /* MLXVLM */,
 			);
 			productName = FastVLMCameraExample;
-			productReference = 019A3E0A2D78E6A00055F93B /* FastVLM App.app */;
+			productReference = 019A3E0A2D78E6A00055F93B /* SceneDescriptor App.app */;
 			productType = "com.apple.product-type.application";
 		};
 		C35372AD2D08C32D00474D34 /* Video */ = {
@@ -331,7 +325,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C35EDB672D07699400757E80 /* Build configuration list for PBXProject "FastVLM" */;
+			buildConfigurationList = C35EDB672D07699400757E80 /* Build configuration list for PBXProject "SceneDescriptor" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -351,7 +345,7 @@
 			projectRoot = "";
 			targets = (
 				C35372AD2D08C32D00474D34 /* Video */,
-				019A3E092D78E6A00055F93B /* FastVLM App */,
+				019A3E092D78E6A00055F93B /* SceneDescriptor App */,
 				C39BB3E52D79082A005DB8FB /* FastVLM */,
 			);
 		};
@@ -408,11 +402,19 @@
 /* Begin PBXTargetDependency section */
 		019A3E242D78E7530055F93B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilters = (
+				ios,
+				macos,
+			);
 			target = C35372AD2D08C32D00474D34 /* Video */;
 			targetProxy = 019A3E232D78E7530055F93B /* PBXContainerItemProxy */;
 		};
 		C3ED55042D7A0A7A005E20B3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilters = (
+				ios,
+				macos,
+			);
 			target = C39BB3E52D79082A005DB8FB /* FastVLM */;
 			targetProxy = C3ED55032D7A0A7A005E20B3 /* PBXContainerItemProxy */;
 		};
@@ -484,7 +486,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FastVLM App/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = FastVLM;
+				INFOPLIST_KEY_CFBundleDisplayName = SceneDescriptor;
 				INFOPLIST_KEY_NSCameraUsageDescription = "FastVLM uses the camera to capture images for real-time AI analysis.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FastVLM needs access to your photo library to analyze selected images.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -498,11 +500,11 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -510,8 +512,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = FastVLM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -581,7 +584,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FastVLM App/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = FastVLM;
+				INFOPLIST_KEY_CFBundleDisplayName = SceneDescriptor;
 				INFOPLIST_KEY_NSCameraUsageDescription = "FastVLM uses the camera to capture images for real-time AI analysis.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FastVLM needs access to your photo library to analyze selected images.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -595,19 +598,20 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = FastVLM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -693,7 +697,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -704,13 +708,14 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 				XROS_DEPLOYMENT_TARGET = 2.0;
@@ -787,7 +792,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -797,12 +802,13 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 				XROS_DEPLOYMENT_TARGET = 2.0;
@@ -959,7 +965,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -970,13 +976,14 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 				XROS_DEPLOYMENT_TARGET = 2.0;
@@ -1053,7 +1060,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -1063,12 +1070,13 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 				XROS_DEPLOYMENT_TARGET = 2.0;
@@ -1078,7 +1086,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		019A3E182D78E6A20055F93B /* Build configuration list for PBXNativeTarget "FastVLM App" */ = {
+		019A3E182D78E6A20055F93B /* Build configuration list for PBXNativeTarget "SceneDescriptor App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				019A3E162D78E6A20055F93B /* Debug */,
@@ -1096,7 +1104,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		C35EDB672D07699400757E80 /* Build configuration list for PBXProject "FastVLM" */ = {
+		C35EDB672D07699400757E80 /* Build configuration list for PBXProject "SceneDescriptor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C35EDB682D07699400757E80 /* Debug */,

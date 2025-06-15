@@ -1,0 +1,195 @@
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/Contents.json b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/Contents.json
+index 515d10d..ca5e690 100644
+--- a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/Contents.json	
++++ b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/Contents.json	
+@@ -1,9 +1,9 @@
+ {
+   "images" : [
+     {
+-      "filename" : "FastVLM - 150 Blue - Light@2x.png",
++      "filename" : "GeneratedAppImage1024 1.jpg",
+       "idiom" : "universal",
+       "platform" : "ios",
+       "size" : "1024x1024"
+     },
+     {
+@@ -11,11 +11,11 @@
+         {
+           "appearance" : "luminosity",
+           "value" : "dark"
+         }
+       ],
+-      "filename" : "FastVLM - 150 Blue - Dark@2x.png",
++      "filename" : "GeneratedAppImage1024 2.jpg",
+       "idiom" : "universal",
+       "platform" : "ios",
+       "size" : "1024x1024"
+     },
+     {
+@@ -23,11 +23,11 @@
+         {
+           "appearance" : "luminosity",
+           "value" : "tinted"
+         }
+       ],
+-      "filename" : "FastVLM - 150 White - Tinted@2x.png",
++      "filename" : "GeneratedAppImage1024 3.jpg",
+       "idiom" : "universal",
+       "platform" : "ios",
+       "size" : "1024x1024"
+     },
+     {
+@@ -64,22 +64,23 @@
+       "idiom" : "mac",
+       "scale" : "1x",
+       "size" : "256x256"
+     },
+     {
++      "filename" : "GeneratedAppImage512 1.jpg",
+       "idiom" : "mac",
+       "scale" : "2x",
+       "size" : "256x256"
+     },
+     {
+-      "filename" : "FastVLM - MacOS - Dark@1x.png",
++      "filename" : "GeneratedAppImage512.jpg",
+       "idiom" : "mac",
+       "scale" : "1x",
+       "size" : "512x512"
+     },
+     {
+-      "filename" : "FastVLM - MacOS - Dark@2x.png",
++      "filename" : "GeneratedAppImage1024.jpg",
+       "idiom" : "mac",
+       "scale" : "2x",
+       "size" : "512x512"
+     }
+   ],
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - 150 Blue - Dark@2x.png b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - 150 Blue - Dark@2x.png
+deleted file mode 100644
+index 2ef2720..0000000
+Binary files a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - 150 Blue - Dark@2x.png and /dev/null differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - 150 Blue - Light@2x.png b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - 150 Blue - Light@2x.png
+deleted file mode 100644
+index 04942ce..0000000
+Binary files a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - 150 Blue - Light@2x.png and /dev/null differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - 150 White - Tinted@2x.png b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - 150 White - Tinted@2x.png
+deleted file mode 100644
+index d70bd78..0000000
+Binary files a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - 150 White - Tinted@2x.png and /dev/null differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - MacOS - Dark@1x.png b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - MacOS - Dark@1x.png
+deleted file mode 100644
+index 4485f76..0000000
+Binary files a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - MacOS - Dark@1x.png and /dev/null differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - MacOS - Dark@2x.png b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - MacOS - Dark@2x.png
+deleted file mode 100644
+index 34906a7..0000000
+Binary files a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/FastVLM - MacOS - Dark@2x.png and /dev/null differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024 1.jpg b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024 1.jpg
+new file mode 100644
+index 0000000..05d60e9
+Binary files /dev/null and b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024 1.jpg differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024 2.jpg b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024 2.jpg
+new file mode 100644
+index 0000000..05d60e9
+Binary files /dev/null and b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024 2.jpg differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024 3.jpg b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024 3.jpg
+new file mode 100644
+index 0000000..05d60e9
+Binary files /dev/null and b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024 3.jpg differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024.jpg b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024.jpg
+new file mode 100644
+index 0000000..05d60e9
+Binary files /dev/null and b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage1024.jpg differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage512 1.jpg b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage512 1.jpg
+new file mode 100644
+index 0000000..a11901c
+Binary files /dev/null and b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage512 1.jpg differ
+diff --git a/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage512.jpg b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage512.jpg
+new file mode 100644
+index 0000000..a11901c
+Binary files /dev/null and b/app/FastVLM App/Assets.xcassets/AppIcon.appiconset/GeneratedAppImage512.jpg differ
+diff --git a/app/FastVLM.xcodeproj/xcshareddata/xcschemes/FastVLM App.xcscheme b/app/FastVLM.xcodeproj/xcshareddata/xcschemes/FastVLM App.xcscheme
+deleted file mode 100644
+index 834f7b4..0000000
+--- a/app/FastVLM.xcodeproj/xcshareddata/xcschemes/FastVLM App.xcscheme	
++++ /dev/null
+@@ -1,78 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<Scheme
+-   LastUpgradeVersion = "1630"
+-   version = "1.7">
+-   <BuildAction
+-      parallelizeBuildables = "YES"
+-      buildImplicitDependencies = "YES"
+-      buildArchitectures = "Automatic">
+-      <BuildActionEntries>
+-         <BuildActionEntry
+-            buildForTesting = "YES"
+-            buildForRunning = "YES"
+-            buildForProfiling = "YES"
+-            buildForArchiving = "YES"
+-            buildForAnalyzing = "YES">
+-            <BuildableReference
+-               BuildableIdentifier = "primary"
+-               BlueprintIdentifier = "019A3E092D78E6A00055F93B"
+-               BuildableName = "FastVLM App.app"
+-               BlueprintName = "FastVLM App"
+-               ReferencedContainer = "container:FastVLM.xcodeproj">
+-            </BuildableReference>
+-         </BuildActionEntry>
+-      </BuildActionEntries>
+-   </BuildAction>
+-   <TestAction
+-      buildConfiguration = "Debug"
+-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+-      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+-      shouldUseLaunchSchemeArgsEnv = "YES"
+-      shouldAutocreateTestPlan = "YES">
+-   </TestAction>
+-   <LaunchAction
+-      buildConfiguration = "Release"
+-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+-      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+-      launchStyle = "0"
+-      useCustomWorkingDirectory = "NO"
+-      ignoresPersistentStateOnLaunch = "NO"
+-      debugDocumentVersioning = "YES"
+-      debugServiceExtension = "internal"
+-      allowLocationSimulation = "YES">
+-      <BuildableProductRunnable
+-         runnableDebuggingMode = "0">
+-         <BuildableReference
+-            BuildableIdentifier = "primary"
+-            BlueprintIdentifier = "019A3E092D78E6A00055F93B"
+-            BuildableName = "FastVLM App.app"
+-            BlueprintName = "FastVLM App"
+-            ReferencedContainer = "container:FastVLM.xcodeproj">
+-         </BuildableReference>
+-      </BuildableProductRunnable>
+-   </LaunchAction>
+-   <ProfileAction
+-      buildConfiguration = "Release"
+-      shouldUseLaunchSchemeArgsEnv = "YES"
+-      savedToolIdentifier = ""
+-      useCustomWorkingDirectory = "NO"
+-      debugDocumentVersioning = "YES">
+-      <BuildableProductRunnable
+-         runnableDebuggingMode = "0">
+-         <BuildableReference
+-            BuildableIdentifier = "primary"
+-            BlueprintIdentifier = "019A3E092D78E6A00055F93B"
+-            BuildableName = "FastVLM App.app"
+-            BlueprintName = "FastVLM App"
+-            ReferencedContainer = "container:FastVLM.xcodeproj">
+-         </BuildableReference>
+-      </BuildableProductRunnable>
+-   </ProfileAction>
+-   <AnalyzeAction
+-      buildConfiguration = "Debug">
+-   </AnalyzeAction>
+-   <ArchiveAction
+-      buildConfiguration = "Release"
+-      revealArchiveInOrganizer = "YES">
+-   </ArchiveAction>
+-</Scheme>

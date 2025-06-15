@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "FastVLM - 150 Blue - Light@2x.png",
+      "filename" : "GeneratedAppImage1024 1.jpg",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "FastVLM - 150 Blue - Dark@2x.png",
+      "filename" : "GeneratedAppImage1024 2.jpg",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -25,7 +25,7 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "FastVLM - 150 White - Tinted@2x.png",
+      "filename" : "GeneratedAppImage1024 3.jpg",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -66,18 +66,19 @@
       "size" : "256x256"
     },
     {
+      "filename" : "GeneratedAppImage512 1.jpg",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "256x256"
     },
     {
-      "filename" : "FastVLM - MacOS - Dark@1x.png",
+      "filename" : "GeneratedAppImage512.jpg",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
-      "filename" : "FastVLM - MacOS - Dark@2x.png",
+      "filename" : "GeneratedAppImage1024.jpg",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

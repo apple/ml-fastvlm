@@ -81,8 +81,8 @@ class SmolVLMModel: VLMModelProtocol {
             try patchModelConfiguration(modelDir: modelDir)
             
         } catch {
-            print("❌ Failed to setup SmolVLM model configuration: \(error)")
-            self.modelInfo = "❌ Configuration Error: \(error.localizedDescription)"
+            print("Failed to setup SmolVLM model configuration: \(error)")
+            self.modelInfo = "Configuration Error: \(error.localizedDescription)"
         }
     }
     
@@ -99,14 +99,14 @@ class SmolVLMModel: VLMModelProtocol {
         
         // Check the current model type
         let currentModelType = config["model_type"] as? String ?? "unknown"
-        print("📋 Current model type: \(currentModelType)")
+        print("Current model type: \(currentModelType)")
         
         if currentModelType == "smolvlm" {
             // The model type should be supported according to VLMModelFactory
             // Let's try using it as-is first
-            print("✅ Using SmolVLM model type as-is")
+            print("Using SmolVLM model type as-is")
         } else {
-            print("⚠️  Unexpected model type: \(currentModelType)")
+            print("Unexpected model type: \(currentModelType)")
         }
     }
     
@@ -126,22 +126,22 @@ class SmolVLMModel: VLMModelProtocol {
             "processor_config.json"
         ]
         
-        print("📁 SmolVLM Model Directory: \(modelDir.path)")
-        print("🔍 Bundle identifier: \(Bundle.main.bundleIdentifier ?? "unknown")")
+        print("SmolVLM Model Directory: \(modelDir.path)")
+        print("Bundle identifier: \(Bundle.main.bundleIdentifier ?? "unknown")")
         
         // List all files in the SmolVLMModel directory
         do {
             let contents = try FileManager.default.contentsOfDirectory(at: modelDir, includingPropertiesForKeys: nil)
-            print("📂 SmolVLMModel directory contents: \(contents.map { $0.lastPathComponent })")
+            print("SmolVLMModel directory contents: \(contents.map { $0.lastPathComponent })")
         } catch {
-            print("❌ Error listing SmolVLMModel directory contents: \(error)")
+            print("Error listing SmolVLMModel directory contents: \(error)")
         }
         
         // Check required files
         for fileName in requiredFiles {
             let fileURL = modelDir.appendingPathComponent(fileName)
             let exists = FileManager.default.fileExists(atPath: fileURL.path)
-            print("📄 \(fileName): \(exists ? "✅ Found" : "❌ Missing") at \(fileURL.path)")
+            print("\(fileName): \(exists ? "Found" : "Missing") at \(fileURL.path)")
             
             if !exists {
                 throw SmolVLMError.configurationError("\(fileName) not found in SmolVLMModel bundle")
@@ -152,7 +152,7 @@ class SmolVLMModel: VLMModelProtocol {
         for fileName in optionalFiles {
             let fileURL = modelDir.appendingPathComponent(fileName)
             let exists = FileManager.default.fileExists(atPath: fileURL.path)
-            print("📄 \(fileName): \(exists ? "✅ Found" : "⚠️ Optional file missing") at \(fileURL.path)")
+            print("\(fileName): \(exists ? "Found" : "Optional file missing") at \(fileURL.path)")
         }
         
         return modelDir
@@ -168,11 +168,20 @@ class SmolVLMModel: VLMModelProtocol {
             // Set MLX memory limits
             MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
             
+            // Check available memory - only use os_proc_available_memory on supported platforms
+            #if os(iOS) || os(macOS)
+            let maxMetalMemory: Int
+            #if os(macOS)
+            // On macOS, use a more conservative approach for Metal memory
+            maxMetalMemory = Int(round(0.6 * Double(ProcessInfo.processInfo.physicalMemory)))
+            #else
             // This may make things very slow when way over the limit
-            let maxMetalMemory = Int(round(0.82 * Double(os_proc_available_memory())))
+            maxMetalMemory = Int(round(0.82 * Double(os_proc_available_memory())))
+            #endif
             MLX.GPU.set(memoryLimit: maxMetalMemory, relaxed: false)
+            #endif
             
-            print("🚀 Loading SmolVLM2 model from: \(modelConfiguration.name)")
+            print("Loading SmolVLM2 model from: \(modelConfiguration.name)")
             
             // Try loading without Hub API first (local directory approach)
             do {
@@ -189,12 +198,12 @@ class SmolVLMModel: VLMModelProtocol {
                     context.model.numParameters()
                 }
                 
-                self.modelInfo = "✅ Loaded SmolVLM2 (\(numParams) parameters)"
+                self.modelInfo = "Loaded SmolVLM2 (\(numParams) parameters)"
                 loadState = .loaded(modelContainer)
                 return modelContainer
                 
             } catch {
-                print("❌ Failed to load SmolVLM with local directory approach: \(error)")
+                print("Failed to load SmolVLM with local directory approach: \(error)")
                 throw SmolVLMError.configurationError("Failed to load SmolVLM model: \(error.localizedDescription)")
             }
             
@@ -207,7 +216,7 @@ class SmolVLMModel: VLMModelProtocol {
         do {
             _ = try await _load()
         } catch {
-            self.modelInfo = "❌ Error loading SmolVLM: \(error.localizedDescription)"
+            self.modelInfo = "Error loading SmolVLM: \(error.localizedDescription)"
             print("SmolVLM load error: \(error)")
         }
     }
@@ -306,19 +315,19 @@ class SmolVLMModel: VLMModelProtocol {
             } catch SmolVLMError.configurationError(let message) {
                 if !Task.isCancelled {
                     Task { @MainActor in
-                        self.output = "❌ SmolVLM Configuration Error: \(message)\n\nNote: This only affects SmolVLM model. FastVLM model should still work normally."
+                        self.output = "SmolVLM Configuration Error: \(message)\n\nNote: This only affects SmolVLM model. FastVLM model should still work normally."
                     }
                 }
             } catch SmolVLMError.imageProcessingError(let message) {
                 if !Task.isCancelled {
                     Task { @MainActor in
-                        self.output = "❌ SmolVLM Image Processing Error: \(message)"
+                        self.output = "SmolVLM Image Processing Error: \(message)"
                     }
                 }
             } catch {
                 if !Task.isCancelled {
                     Task { @MainActor in
-                        self.output = "❌ SmolVLM Failed: \(error.localizedDescription)"
+                        self.output = "SmolVLM Failed: \(error.localizedDescription)"
                     }
                 }
             }

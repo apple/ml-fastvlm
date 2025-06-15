@@ -8,6 +8,10 @@ import MLXLMCommon
 import SwiftUI
 import Video
 
+#if canImport(UIKit)
+import UIKit
+#endif
+
 // support swift 6
 extension CVImageBuffer: @unchecked @retroactive Sendable {}
 extension CMSampleBuffer: @unchecked @retroactive Sendable {}
@@ -28,7 +32,7 @@ struct ContentView: View {
     @State private var isShowingInfo: Bool = false
     @State private var showingModelSelector = false
 
-    @State private var selectedCameraType: CameraType = .continuous
+    @State private var selectedCameraType: CameraType = .single
     @State private var isEditingPrompt: Bool = false
     
     var statusTextColor: Color {
@@ -60,7 +64,9 @@ struct ContentView: View {
                 promptSections
                 responseSection
             }
+            #if os(iOS)
             .listSectionSpacing(0)
+            #endif
             .task {
                 camera.start()
             }
@@ -68,10 +74,14 @@ struct ContentView: View {
                 await modelManager.loadCurrentModel()
             }
             .onAppear {
+                #if canImport(UIKit)
                 UIApplication.shared.isIdleTimerDisabled = true
+                #endif
             }
             .onDisappear {
+                #if canImport(UIKit)
                 UIApplication.shared.isIdleTimerDisabled = false
+                #endif
             }
             .task {
                 if Task.isCancelled {
@@ -79,61 +89,14 @@ struct ContentView: View {
                 }
                 await distributeVideoFrames()
             }
-            .navigationTitle("FastVLM")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        isShowingInfo.toggle()
-                    } label: {
-                        Image(systemName: "info.circle")
-                    }
-                }
-
-                ToolbarItem(placement: .navigation) {
-                    Button {
-                        showingModelSelector.toggle()
-                    } label: {
-                        HStack {
-                            Image(systemName: "cpu")
-                            Text(modelManager.selectedModelType.rawValue)
-                                .font(.caption)
-                        }
-                    }
-                    .disabled(modelManager.isSwitchingModels || modelManager.running)
-                }
-
-                ToolbarItem(placement: .primaryAction) {
-                    if isEditingPrompt {
-                        Button {
-                            isEditingPrompt.toggle()
-                        } label: {
-                            Text("Done")
-                                .fontWeight(.bold)
-                        }
-                    } else {
-                        Menu {
-                            Button("Describe image") {
-                                prompt = "Describe the image in English."
-                                promptSuffix = "Output should be brief, about 15 words or less."
-                            }
-                            Button("Facial expression") {
-                                prompt = "What is this person's facial expression?"
-                                promptSuffix = "Output only one or two words."
-                            }
-                            Button("Read text") {
-                                prompt = "What is written in this image?"
-                                promptSuffix = "Output only the text in the image."
-                            }
-                            Button("Customize...") {
-                                isEditingPrompt.toggle()
-                            }
-                        } label: { 
-                            Text("Prompts") 
-                        }
-                    }
-                }
-            }
+            .modifier(NavigationBarModifier(
+                modelManager: modelManager,
+                isEditingPrompt: $isEditingPrompt,
+                showingModelSelector: $showingModelSelector,
+                isShowingInfo: $isShowingInfo,
+                prompt: $prompt,
+                promptSuffix: $promptSuffix
+            ))
             .sheet(isPresented: $isShowingInfo) {
                 InfoView()
             }
@@ -409,6 +372,90 @@ struct ContentView: View {
     }
 }
 
+// MARK: - Navigation Bar Modifier
+
+struct NavigationBarModifier: ViewModifier {
+    let modelManager: ModelManager
+    @Binding var isEditingPrompt: Bool
+    @Binding var showingModelSelector: Bool
+    @Binding var isShowingInfo: Bool
+    @Binding var prompt: String
+    @Binding var promptSuffix: String
+    
+    func body(content: Content) -> some View {
+        content
+            .navigationBarBackButtonHidden(false)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Button {
+                        showingModelSelector.toggle()
+                    } label: {
+                        HStack {
+                            Image(systemName: "cpu")
+                            Text(modelManager.selectedModelType.rawValue)
+                                .font(.headline)
+                                .fontWeight(.medium)
+                        }
+                        .foregroundColor(.primary)
+                    }
+                    .disabled(modelManager.isSwitchingModels || modelManager.running)
+                }
+
+                #if os(iOS)
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        isShowingInfo.toggle()
+                    } label: {
+                        Image(systemName: "info.circle")
+                    }
+                }
+                #else
+                ToolbarItem(placement: .navigation) {
+                    Button {
+                        isShowingInfo.toggle()
+                    } label: {
+                        Image(systemName: "info.circle")
+                    }
+                }
+                #endif
+
+                ToolbarItem(placement: .primaryAction) {
+                    if isEditingPrompt {
+                        Button {
+                            isEditingPrompt.toggle()
+                        } label: {
+                            Text("Done")
+                                .fontWeight(.bold)
+                        }
+                    } else {
+                        Menu {
+                            Button("Custom System Prompt") {
+                                prompt = "You are an AI assistant specialized in describing visual scenes to blind and visually impaired individuals. Your purpose is to help users better understand their surroundings while navigating outdoor environments.\n\nThe user is walking outdoors and uses a white cane to follow physical cues such as walls, curbs, and transitions between different surfaces like grass, bike paths, and sidewalks. The user may ask you for information when they are unsure about what is around them, when they are unsure how or whether to proceed, or when their white cane does not provide enough information.\n\nYou must not provide the following types of information, even if the user asks for them:\n\n- Distances to objects or features in the environment (e.g., in meters, steps, or similar terms)\n\n- The color of traffic lights (e.g., \"The traffic light is red\" or \"green\")\n\n- Any assessment of whether it is safe or unsafe to cross a street\n\n- Whether a vehicle is moving or stationary\n\nIf the user asks about any of these, always respond with:\n\"I cannot answer that, please ask something else.\"\n\nInteraction guidelines:\n\n- Always refer only to the latest image provided\n\n- Respond promptly, briefly, and clearly\n\n- Provide only significant and relevant information\n\n- Use informal, polite, and patient language\n\n- If the image does not contain what the user is asking about, reply:\n\"I cannot see what you are asking about in the image.\"\n\n- Do not mention materials, surfaces, or colors unless the user explicitly asks\n\n- Always end your response with an invitation for follow-up, such as:\n\"Feel free to ask me another question.\"\n\n- When describing objects, explain their spatial arrangement and their position relative to the user using clock directions (e.g., \"The bench is at 2 o'clock.\")\n\nTypes of questions the user might ask:\n\nGeneral scene questions (e.g., \"Please describe the area in front of me\")\n→ Respond with one concise sentence summarizing the scene.\n\nSpecific questions about objects or navigation (e.g., \"What is in front of me?\", \"Where is the bench?\", \"What number is this bus?\")\n→ Name the visible objects, describe how they are arranged, and specify their location using clock directions relative to the user's position."
+                                promptSuffix = ""
+                            }
+                            Button("Describe image") {
+                                prompt = "Describe the image in English. Output should be brief, about 15 words or less."
+                                promptSuffix = ""
+                            }
+                            Button("Read text") {
+                                prompt = "What is written in this image?"
+                                promptSuffix = "Output only the text in the image."
+                            }
+                            Button("Customize...") {
+                                isEditingPrompt.toggle()
+                            }
+                        } label: { 
+                            Text("Prompts") 
+                        }
+                    }
+                }
+            }
+    }
+}
+
 #Preview {
     ContentView()
 }
@@ -480,9 +527,8 @@ private extension ContentView {
                 }
             }
             .navigationTitle("Select Model")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
                         showingModelSelector = false
                     }
@@ -500,5 +546,3 @@ private extension ContentView {
         }
     }
 }
-    // MARK: - Frame Processing
-
