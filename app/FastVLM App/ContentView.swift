@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var camera = CameraController()
     @State private var modelManager = ModelManager()
     @State private var memoryMonitor = MemoryMonitor()
+    @State private var speechManager = SpeechManager()
 
     /// stream of frames -> VideoFrameView, see distributeVideoFrames
     @State private var framesToDisplay: AsyncStream<CVImageBuffer>?
@@ -37,6 +38,7 @@ struct ContentView: View {
     @State private var isEditingPrompt: Bool = false
     
     @State private var showingDebugView = false
+    @State private var showingSpeechSettings = false
     
     @State private var frameDistributionTask: Task<Void, Never>? = nil
     
@@ -112,7 +114,8 @@ struct ContentView: View {
                 isShowingInfo: $isShowingInfo,
                 prompt: $prompt,
                 promptSuffix: $promptSuffix,
-                showingDebugView: $showingDebugView
+                showingDebugView: $showingDebugView,
+                showingSpeechSettings: $showingSpeechSettings
             ))
             .sheet(isPresented: $isShowingInfo) {
                 InfoView()
@@ -122,6 +125,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingDebugView) {
                 DebugView(modelManager: modelManager)
+            }
+            .sheet(isPresented: $showingSpeechSettings) {
+                SpeechSettingsView(speechManager: speechManager)
             }
         }
     }
@@ -241,18 +247,64 @@ struct ContentView: View {
                     .controlSize(.large)
                     .frame(maxWidth: .infinity)
             } else {
-                ScrollView {
-                    Text(modelManager.output)
-                        .foregroundStyle(isEditingPrompt ? .secondary : .primary)
-                        .textSelection(.enabled)
+                VStack(alignment: .leading, spacing: 12) {
+                    ScrollView {
+                        Text(modelManager.output)
+                            .foregroundStyle(isEditingPrompt ? .secondary : .primary)
+                            .textSelection(.enabled)
+                    }
+                    .frame(minHeight: 50.0, maxHeight: 200.0)
+                    
+                    if !modelManager.output.isEmpty {
+                        HStack {
+                            Button(action: {
+                                if speechManager.isSpeaking {
+                                    if speechManager.isPaused {
+                                        speechManager.resume()
+                                    } else {
+                                        speechManager.pause()
+                                    }
+                                } else {
+                                    speechManager.speak(modelManager.output)
+                                }
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: speechManager.isSpeaking ?
+                                        (speechManager.isPaused ? "play.circle" : "pause.circle") :
+                                        "speaker.wave.2.circle")
+                                    Text(speechManager.isSpeaking ?
+                                        (speechManager.isPaused ? "Resume" : "Pause") :
+                                        "Read Response")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            
+                            if speechManager.isSpeaking {
+                                Button(action: {
+                                    speechManager.stop()
+                                }) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "stop.circle")
+                                        Text("Stop")
+                                    }
+                                    .font(.caption)
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+                            
+                            Spacer()
+                        }
+                    }
                 }
-                .frame(minHeight: 50.0, maxHeight: 200.0)
             }
         } header: {
             Text("Response")
         }
     }
-    
+
     @ViewBuilder
     private var statusIndicatorView: some View {
         if let fastVLMModel = modelManager.currentModel as? FastVLMModel,
@@ -382,7 +434,13 @@ struct ContentView: View {
             )
             
             let t = await modelManager.generate(userInput)
-            _ = await t.result
+            let result = await t.result
+            
+            await MainActor.run {
+                if !modelManager.output.isEmpty {
+                    speechManager.speakIfAutoEnabled(modelManager.output)
+                }
+            }
             
             print("[ContentView] Completed inference for frame \(frameCount), waiting 10 seconds...")
 
@@ -404,7 +462,7 @@ struct ContentView: View {
             self.framesToDisplay = nil
         }
         
-        let frames = AsyncStream<CMSampleBuffer>(bufferingPolicy: .bufferingOldest(1)) { 
+        let frames = AsyncStream<CMSampleBuffer>(bufferingPolicy: .bufferingOldest(1)) {
             camera.attach(continuation: $0)
         }
 
@@ -441,7 +499,7 @@ struct ContentView: View {
                     frameCount += 1
                     
                     let now = Date()
-                    if now.timeIntervalSince(lastMemoryCheck) > 5.0 { 
+                    if now.timeIntervalSince(lastMemoryCheck) > 5.0 {
                         lastMemoryCheck = now
                         
                         let memoryPressure = ProcessInfo.processInfo.thermalState
@@ -499,6 +557,7 @@ struct ContentView: View {
     func processSingleFrame(_ frame: CVImageBuffer) {
         Task { @MainActor in
             modelManager.currentModel.output = ""
+            speechManager.stop()
         }
 
         let userInput = UserInput(
@@ -508,6 +567,11 @@ struct ContentView: View {
 
         Task {
             await modelManager.generate(userInput)
+            await MainActor.run {
+                if !modelManager.output.isEmpty {
+                    speechManager.speakIfAutoEnabled(modelManager.output)
+                }
+            }
         }
     }
 }
@@ -522,6 +586,7 @@ struct NavigationBarModifier: ViewModifier {
     @Binding var prompt: String
     @Binding var promptSuffix: String
     @Binding var showingDebugView: Bool
+    @Binding var showingSpeechSettings: Bool
     
     func body(content: Content) -> some View {
         content
@@ -560,6 +625,12 @@ struct NavigationBarModifier: ViewModifier {
                         } label: {
                             Image(systemName: "ladybug")
                         }
+                        
+                        Button {
+                            showingSpeechSettings.toggle()
+                        } label: {
+                            Image(systemName: "speaker.wave.2")
+                        }
                     }
                 }
                 #else
@@ -575,6 +646,12 @@ struct NavigationBarModifier: ViewModifier {
                             showingDebugView.toggle()
                         } label: {
                             Image(systemName: "ladybug")
+                        }
+                        
+                        Button {
+                            showingSpeechSettings.toggle()
+                        } label: {
+                            Image(systemName: "speaker.wave.2")
                         }
                     }
                 }

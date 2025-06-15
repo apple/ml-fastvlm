@@ -18,6 +18,7 @@ typealias PlatformImage = NSImage
 
 struct EnhancedContentView: View {
     @State private var modelManager = ModelManager()
+    @State private var speechManager = SpeechManager()
     @State private var selectedImages: [PhotosPickerItem] = []
     @State private var userInput = UserInput(messages: [])
     @State private var showingImagePicker = false
@@ -273,8 +274,40 @@ struct EnhancedContentView: View {
     
     private var outputSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Output")
-                .font(.headline)
+            HStack {
+                Text("Output")
+                    .font(.headline)
+                
+                Spacer()
+                
+                if !modelManager.output.isEmpty {
+                    Button(action: {
+                        if speechManager.isSpeaking {
+                            if speechManager.isPaused {
+                                speechManager.resume()
+                            } else {
+                                speechManager.pause()
+                            }
+                        } else {
+                            speechManager.speak(modelManager.output)
+                        }
+                    }) {
+                        Image(systemName: speechManager.isSpeaking ? 
+                            (speechManager.isPaused ? "play.circle.fill" : "pause.circle.fill") : 
+                            "speaker.wave.2.circle.fill")
+                    }
+                    .buttonStyle(.borderless)
+                    
+                    if speechManager.isSpeaking {
+                        Button(action: {
+                            speechManager.stop()
+                        }) {
+                            Image(systemName: "stop.circle.fill")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+            }
             
             ScrollView {
                 Text(modelManager.output.isEmpty ? "Output will appear here..." : modelManager.output)
