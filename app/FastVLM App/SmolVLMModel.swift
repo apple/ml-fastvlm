@@ -63,6 +63,18 @@ class SmolVLMModel: VLMModelProtocol {
     // Model configuration - similar to FastVLM
     private var modelConfiguration: ModelConfiguration? = nil
     
+    // Runtime configuration similar to HuggingSnap
+    private struct SmolVLMConfiguration {
+        let photoSystemPrompt = "You are an image understanding model capable of describing the salient features of any image."
+        let photoUserPrompt = "Describe this image."
+        let videoSystemPrompt = "Focus only on describing the key dramatic action or notable event occurring in this video segment. Skip general context or scene-setting details unless they are crucial to understanding the main action."
+        let videoUserPrompt = "What is the main action or notable event happening in this segment? Describe it in one brief sentence."
+        let temperature: Float = 0.7
+        let topP: Float = 0.9
+    }
+    
+    private let configuration = SmolVLMConfiguration()
+    
     public init() {
         // SmolVLM initialization - set up model configuration
         setupModelConfiguration()
@@ -182,21 +194,21 @@ class SmolVLMModel: VLMModelProtocol {
                 throw SmolVLMError.configurationError("Model configuration not set up")
             }
             
-            // Set MLX memory limits
-            MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
+            // With 2.8GB already used, we need to be very careful with GPU memory
+            MLX.GPU.set(cacheLimit: 8 * 1024 * 1024) // 8MB cache limit (very conservative)
             
             // Check available memory - only use os_proc_available_memory on supported platforms
             #if os(iOS) || os(macOS)
             let maxMetalMemory: Int
             #if os(macOS)
-            // On macOS, use a more conservative approach for Metal memory
-            maxMetalMemory = Int(round(0.6 * Double(ProcessInfo.processInfo.physicalMemory)))
+            // Leave plenty of room for system and other apps
+            let availableMemory = ProcessInfo.processInfo.physicalMemory - 2800 * 1024 * 1024 // Subtract current usage
+            maxMetalMemory = min(800 * 1024 * 1024, Int(round(0.15 * Double(availableMemory)))) // Max 800MB or 15% of available
             #else
-            // This may make things very slow when way over the limit
-            maxMetalMemory = Int(round(0.82 * Double(os_proc_available_memory())))
+            maxMetalMemory = min(512 * 1024 * 1024, Int(round(0.3 * Double(os_proc_available_memory())))) // Max 512MB or 30% available
             #endif
-            MLX.GPU.set(memoryLimit: maxMetalMemory, relaxed: false)
-            print("[SmolVLM Debug] Set Metal memory limit to: \(maxMetalMemory / 1024 / 1024) MB")
+            MLX.GPU.set(memoryLimit: maxMetalMemory, relaxed: true)
+            print("[SmolVLM Debug] Set Metal memory limit to: \(maxMetalMemory / 1024 / 1024) MB (relaxed mode)")
             #endif
             
             print("[SmolVLM Debug] Loading SmolVLM2 model from: \(modelConfiguration.name)")
@@ -245,8 +257,21 @@ class SmolVLMModel: VLMModelProtocol {
         // Cancel any existing task
         currentTask?.cancel()
         
+        MLX.GPU.clearCache()
+        
         // Create new task and store reference
         let task = Task {
+            defer {
+                Task { @MainActor in
+                    if self.evaluationState == .generatingResponse {
+                        self.evaluationState = .idle
+                    }
+                    self.running = false
+                }
+                
+                MLX.GPU.clearCache()
+            }
+            
             do {
                 let modelContainer = try await _load()
                 
@@ -267,12 +292,80 @@ class SmolVLMModel: VLMModelProtocol {
                 print("[SmolVLM Debug] User prompt: \(userInput.prompt)")
                 print("[SmolVLM Debug] Number of images: \(userInput.images.count)")
                 
-                // Generate response using SmolVLM - same pattern as FastVLM
+                // Generate response using SmolVLM with HuggingSnap format
                 let result = try await modelContainer.perform { context in
                     print("[SmolVLM Debug] Preparing input with processor...")
                     
+                    // Determine prompts based on media type
+                    let hasVideo = !userInput.videos.isEmpty
+                    let systemPrompt = hasVideo ? configuration.videoSystemPrompt : configuration.photoSystemPrompt
+                    
+                    // Extract text from UserInput.Prompt enum properly
+                    let userPromptText: String
+                    switch userInput.prompt {
+                    case .text(let text):
+                        userPromptText = text.isEmpty ? (hasVideo ? configuration.videoUserPrompt : configuration.photoUserPrompt) : text
+                    case .messages(let messages):
+                        // Extract text from messages if available
+                        if let lastMessage = messages.last,
+                           let content = lastMessage["content"] as? String {
+                            userPromptText = content.isEmpty ? (hasVideo ? configuration.videoUserPrompt : configuration.photoUserPrompt) : content
+                        } else {
+                            userPromptText = hasVideo ? configuration.videoUserPrompt : configuration.photoUserPrompt
+                        }
+                    @unknown default:
+                        userPromptText = hasVideo ? configuration.videoUserPrompt : configuration.photoUserPrompt
+                    }
+                    
+                    // Process images to match HuggingSnap format - oriented right for proper display
+                    let processedImages: [UserInput.Image] = userInput.images.map { image in
+                        switch image {
+                        case .ciImage(let ciImage):
+                            // Apply right orientation like HuggingSnap
+                            let orientedImage = ciImage.oriented(.right)
+                            return .ciImage(orientedImage)
+                        case .url(let url):
+                            // Keep URL as-is for now
+                            return .url(url)
+                        case .array(let array):
+                            // Keep array as-is for now
+                            return .array(array)
+                        }
+                    }
+                    
+                    // Use HuggingSnap message format for SmolVLM
+                    let messages: [Message] = [
+                        [
+                            "role": "system",
+                            "content": [
+                                [
+                                    "type": "text",
+                                    "text": systemPrompt,
+                                ],
+                            ]
+                        ],
+                        [
+                            "role": "user",
+                            "content": []
+                            + processedImages.map { _ in
+                                ["type": "image"]
+                            }
+                            + userInput.videos.map { _ in
+                                ["type": "video"]
+                            }
+                            + [["type": "text", "text": userPromptText]]
+                        ]
+                    ]
+                    
+                    // Create properly formatted UserInput for SmolVLM
+                    let smolVLMInput = UserInput(
+                        messages: messages, 
+                        images: processedImages, 
+                        videos: userInput.videos
+                    )
+                    
                     // Prepare the input using the model's processor
-                    let input = try await context.processor.prepare(input: userInput)
+                    let input = try await context.processor.prepare(input: smolVLMInput)
                     
                     print("[SmolVLM Debug] Input prepared successfully")
                     print("[SmolVLM Debug] Input type: \(type(of: input))")
@@ -280,11 +373,10 @@ class SmolVLMModel: VLMModelProtocol {
                     var seenFirstToken = false
                     var generatedTokens: [Int] = []
                     
-                    // Generate with proper parameters - ADD: More conservative parameters for debugging
+                    // Use HuggingSnap generation parameters
                     let generationParameters = MLXLMCommon.GenerateParameters(
-                        temperature: 0.1,  // Lower temperature for more deterministic output
-                        topP: 0.95,        // Slightly higher top-p
-                        repetitionPenalty: 1.05  // Small repetition penalty
+                        temperature: configuration.temperature,
+                        topP: configuration.topP
                     )
                     
                     print("[SmolVLM Debug] Generation parameters: temp=\(generationParameters.temperature ?? 0), topP=\(generationParameters.topP ?? 0)")
@@ -387,13 +479,6 @@ class SmolVLMModel: VLMModelProtocol {
                         self.output = "SmolVLM Failed: \(error.localizedDescription)"
                     }
                 }
-            }
-            
-            Task { @MainActor in
-                if self.evaluationState == .generatingResponse {
-                    self.evaluationState = .idle
-                }
-                self.running = false
             }
         }
         

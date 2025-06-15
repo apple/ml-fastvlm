@@ -17,8 +17,11 @@ public class CameraController: NSObject {
 
     public var backCamera = true {
         didSet {
-            stop()
-            start()
+            Task {
+                try? await Task.sleep(for: .milliseconds(100))
+                stop()
+                start()
+            }
         }
     }
 
@@ -26,8 +29,11 @@ public class CameraController: NSObject {
 
     public var device: AVCaptureDevice? = AVCaptureDevice.default(for: .video) {
         didSet {
-            stop()
-            start()
+            Task {
+                try? await Task.sleep(for: .milliseconds(100))
+                stop()
+                start()
+            }
         }
     }
 
@@ -36,6 +42,9 @@ public class CameraController: NSObject {
     private let sessionQueue = DispatchQueue(label: "sessionQueue")
     @objc dynamic private var rotationCoordinator : AVCaptureDevice.RotationCoordinator?
     private var rotationObservation: NSKeyValueObservation?
+    
+    private var lastFrameTime: CFAbsoluteTime = 0
+    private let frameThrottleInterval: CFAbsoluteTime = 1.0 / 30.0 // 30 FPS max
 
     public func attach(continuation: AsyncStream<CMSampleBuffer>.Continuation) {
         sessionQueue.async {
@@ -45,16 +54,20 @@ public class CameraController: NSObject {
 
     public func detatch() {
         sessionQueue.async {
+            self.framesContinuation?.finish()
             self.framesContinuation = nil
         }
     }
 
     public func stop() {
         sessionQueue.sync { [self] in
+            rotationObservation?.invalidate()
+            rotationObservation = nil
+            rotationCoordinator = nil
+            
             captureSession?.stopRunning()
             captureSession = nil
         }
-
     }
 
     public func start() {
@@ -195,6 +208,12 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate {
         _ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
+        let currentTime = CFAbsoluteTimeGetCurrent()
+        if currentTime - lastFrameTime < frameThrottleInterval {
+            return // Skip this frame
+        }
+        lastFrameTime = currentTime
+        
         if sampleBuffer.isValid && sampleBuffer.imageBuffer != nil {
             framesContinuation?.yield(sampleBuffer)
         }

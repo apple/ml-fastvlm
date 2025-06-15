@@ -6,6 +6,7 @@
 import Foundation
 import SwiftUI
 import MLXLMCommon
+import MLX
 
 @Observable
 @MainActor
@@ -17,26 +18,44 @@ class ModelManager {
     var isSwitchingModels = false
     var switchingProgress: String = ""
     
-    private var secondaryModel: (any VLMModelProtocol)? = nil
-    private var secondaryModelType: ModelType? = nil
+    private var lastMemoryWarning: Date?
+    private let memoryWarningThreshold: TimeInterval = 5.0 // 5 seconds between warnings
     
     init() {
         self.currentModel = ModelFactory.createModel(type: .smolVLM)
         
-        // Initialize secondary model (FastVLM) in background
-        Task {
-            await initializeSecondaryModel()
+        #if canImport(UIKit)
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleMemoryWarning()
         }
+        #endif
     }
     
-    private func initializeSecondaryModel() async {
-        // Create the secondary model (FastVLM when SmolVLM is primary)
-        let secondaryType: ModelType = selectedModelType == .smolVLM ? .fastVLM : .smolVLM
-        secondaryModel = ModelFactory.createModel(type: secondaryType)
-        secondaryModelType = secondaryType
+    private func handleMemoryWarning() {
+        let now = Date()
+        if let lastWarning = lastMemoryWarning,
+           now.timeIntervalSince(lastWarning) < memoryWarningThreshold {
+            return // Don't spam memory warnings
+        }
+        lastMemoryWarning = now
         
-        // Load secondary model in background
-        await secondaryModel?.load()
+        print("[ModelManager] Memory warning received - triggering cleanup")
+        
+        // Cancel any running generation
+        currentModel.cancel()
+        
+        // Force garbage collection
+        Task {
+            // Small delay to allow cancellation
+            try? await Task.sleep(for: .milliseconds(100))
+            
+            // Trigger MLX cleanup
+            MLX.GPU.clearCache()
+        }
     }
     
     func switchModel(to modelType: ModelType) async {
@@ -48,28 +67,30 @@ class ModelManager {
         // Cancel any current generation
         currentModel.cancel()
         
-        // If we have the target model already loaded as secondary, swap them
-        if let secondaryModel = secondaryModel, secondaryModelType == modelType {
-            let oldCurrent = currentModel
-            let oldType = selectedModelType
-            
-            // Swap models
-            self.currentModel = secondaryModel
-            self.selectedModelType = modelType
-            
-            // Make old current the new secondary
-            self.secondaryModel = oldCurrent
-            self.secondaryModelType = oldType
-        } else {
-            // Create new model if not available
-            selectedModelType = modelType
-            currentModel = ModelFactory.createModel(type: modelType)
-            
-            switchingProgress = "Loading \(modelType.displayName)..."
-            await currentModel.load()
-            
-            // Update secondary model
-            await initializeSecondaryModel()
+        var waitCount = 0
+        while currentModel.running && waitCount < 10 {
+            try? await Task.sleep(for: .milliseconds(100))
+            waitCount += 1
+        }
+        
+        // This ensures clean memory management
+        selectedModelType = modelType
+        
+        let oldModel = currentModel
+        oldModel.cancel()
+        
+        // Clear MLX cache before loading new model
+        MLX.GPU.clearCache()
+        
+        // Create new model
+        currentModel = ModelFactory.createModel(type: modelType)
+        
+        switchingProgress = "Loading \(modelType.displayName)..."
+        await currentModel.load()
+        
+        Task {
+            try? await Task.sleep(for: .milliseconds(500))
+            MLX.GPU.clearCache()
         }
         
         isSwitchingModels = false
@@ -81,11 +102,30 @@ class ModelManager {
     }
     
     func generate(_ userInput: UserInput) async -> Task<Void, Never> {
+        if ProcessInfo.processInfo.physicalMemory > 0 {
+            let usedMemory = getUsedMemory()
+            let totalMemory = ProcessInfo.processInfo.physicalMemory
+            let memoryUsagePercent = Double(usedMemory) / Double(totalMemory) * 100
+            
+            if memoryUsagePercent > 80 {
+                print("[ModelManager] High memory usage: \(Int(memoryUsagePercent))% - triggering cleanup")
+                MLX.GPU.clearCache()
+            }
+        }
+        
         if running {
             print("[ModelManager] Cancelling existing generation to start new one")
             currentModel.cancel()
-            // Give a small delay to allow cancellation to complete
-            try? await Task.sleep(for: .milliseconds(50))
+            
+            var waitCount = 0
+            while currentModel.running && waitCount < 20 { // Max 1 second wait
+                try? await Task.sleep(for: .milliseconds(50))
+                waitCount += 1
+            }
+            
+            if currentModel.running {
+                print("[ModelManager] Warning: Previous generation did not cancel cleanly")
+            }
         }
         
         return await currentModel.generate(userInput)
@@ -95,6 +135,22 @@ class ModelManager {
         currentModel.cancel()
     }
     
+    private func getUsedMemory() -> UInt64 {
+        var info = mach_task_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout.size(ofValue: info) / MemoryLayout<integer_t>.size)
+        
+        let kerr = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+        
+        if kerr == KERN_SUCCESS {
+            return info.resident_size
+        }
+        return 0
+    }
+    
     // Computed properties for easy access
     var running: Bool {
         currentModel.running
@@ -102,22 +158,6 @@ class ModelManager {
     
     var modelInfo: String {
         let primaryInfo = currentModel.modelInfo
-        
-        if let secondaryModel = secondaryModel,
-           let secondaryType = secondaryModelType {
-            let secondaryInfo = secondaryModel.modelInfo
-            
-            if primaryInfo.isEmpty && secondaryInfo.isEmpty {
-                return "Loading models..."
-            } else if primaryInfo.isEmpty {
-                return "Loading \(selectedModelType.rawValue)... | \(secondaryType.rawValue): \(secondaryInfo)"
-            } else if secondaryInfo.isEmpty {
-                return "\(selectedModelType.rawValue): \(primaryInfo) | Loading \(secondaryType.rawValue)..."
-            } else {
-                return "\(selectedModelType.rawValue): \(primaryInfo) | \(secondaryType.rawValue): \(secondaryInfo)"
-            }
-        }
-        
         return primaryInfo.isEmpty ? "Loading \(selectedModelType.rawValue)..." : "\(selectedModelType.rawValue): \(primaryInfo)"
     }
     
@@ -129,25 +169,21 @@ class ModelManager {
         currentModel.promptTime
     }
     
-    var secondaryModelInfo: String {
-        guard let secondaryModel = secondaryModel,
-              let secondaryType = secondaryModelType else {
-            return "No secondary model"
-        }
-        
-        let info = secondaryModel.modelInfo
-        return info.isEmpty ? "\(secondaryType.rawValue): Loading..." : "\(secondaryType.rawValue): \(info)"
+    var allModelsStatus: String {
+        return "\(selectedModelType.rawValue): \(running ? "Running" : "Ready")"
     }
     
-    var allModelsStatus: String {
-        let primaryStatus = "\(selectedModelType.rawValue): \(running ? "Running" : "Ready")"
+    var memoryStatus: String {
+        let usedMemory = getUsedMemory()
+        let totalMemory = ProcessInfo.processInfo.physicalMemory
+        let usedMB = usedMemory / 1024 / 1024
+        let totalMB = totalMemory / 1024 / 1024
+        let percentage = Double(usedMemory) / Double(totalMemory) * 100
         
-        if let secondaryType = secondaryModelType {
-            let secondaryRunning = secondaryModel?.running ?? false
-            let secondaryStatus = "\(secondaryType.rawValue): \(secondaryRunning ? "Running" : "Ready")"
-            return "\(primaryStatus) | \(secondaryStatus)"
-        }
-        
-        return primaryStatus
+        return "\(usedMB)MB / \(totalMB)MB (\(Int(percentage))%)"
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }

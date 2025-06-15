@@ -22,6 +22,7 @@ let FRAME_DELAY = Duration.seconds(15)
 struct ContentView: View {
     @State private var camera = CameraController()
     @State private var modelManager = ModelManager()
+    @State private var memoryMonitor = MemoryMonitor()
 
     /// stream of frames -> VideoFrameView, see distributeVideoFrames
     @State private var framesToDisplay: AsyncStream<CVImageBuffer>?
@@ -38,6 +39,8 @@ struct ContentView: View {
     @State private var showingDebugView = false
     
     @State private var frameDistributionTask: Task<Void, Never>? = nil
+    
+    @State private var cameraTypeChangeTimer: Timer?
 
     var statusTextColor: Color {
         guard let fastVLMModel = modelManager.currentModel as? FastVLMModel else {
@@ -81,12 +84,17 @@ struct ContentView: View {
                 #if canImport(UIKit)
                 UIApplication.shared.isIdleTimerDisabled = true
                 #endif
+                memoryMonitor.startMonitoring()
             }
             .onDisappear {
                 #if canImport(UIKit)
                 UIApplication.shared.isIdleTimerDisabled = false
                 #endif
+                cameraTypeChangeTimer?.invalidate()
                 frameDistributionTask?.cancel()
+                camera.stop()
+                modelManager.cancel()
+                memoryMonitor.stopMonitoring()
             }
             .task {
                 frameDistributionTask = Task {
@@ -131,16 +139,22 @@ struct ContentView: View {
                 .onChange(of: selectedCameraType) { oldValue, newValue in
                     print("[ContentView] Camera type changed from \(oldValue.rawValue) to \(newValue.rawValue)")
                     
-                    // Cancel current model generation
-                    modelManager.cancel()
-                    
-                    // Cancel and restart frame distribution
-                    frameDistributionTask?.cancel()
-                    frameDistributionTask = Task {
-                        // Small delay to ensure clean transition
-                        try? await Task.sleep(for: .milliseconds(100))
-                        if !Task.isCancelled {
-                            await distributeVideoFrames()
+                    cameraTypeChangeTimer?.invalidate()
+                    cameraTypeChangeTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
+                        Task { @MainActor in
+                            // Cancel current model generation
+                            modelManager.cancel()
+                            
+                            // Cancel and restart frame distribution with proper cleanup
+                            frameDistributionTask?.cancel()
+                            
+                            try? await Task.sleep(for: .milliseconds(200))
+                            
+                            frameDistributionTask = Task {
+                                if !Task.isCancelled {
+                                    await distributeVideoFrames()
+                                }
+                            }
                         }
                     }
                 }
@@ -318,11 +332,33 @@ struct ContentView: View {
         
         print("[ContentView] Starting continuous analysis...")
         var frameCount = 0
+        let maxFramesPerMinute = 10
+        var processedFramesInWindow = 0
+        var windowStartTime = Date()
         
         for await frame in frames {
             if Task.isCancelled {
                 print("[ContentView] Continuous analysis cancelled")
                 break
+            }
+            
+            let memoryUsage = await MainActor.run { memoryMonitor.memoryUsageMB }
+            if memoryUsage > 6000 { // More than 6GB used (75% of 8GB)
+                print("[ContentView] High memory usage (\(Int(memoryUsage))MB), skipping frame")
+                try? await Task.sleep(for: .seconds(5)) // Wait before checking again
+                continue
+            }
+            
+            let now = Date()
+            if now.timeIntervalSince(windowStartTime) > 60 {
+                // Reset window
+                windowStartTime = now
+                processedFramesInWindow = 0
+            }
+            
+            if processedFramesInWindow >= maxFramesPerMinute {
+                print("[ContentView] Frame processing rate limit reached, skipping")
+                continue
             }
             
             // Double-check we're still in continuous mode
@@ -333,7 +369,6 @@ struct ContentView: View {
             }
             
             frameCount += 1
-            print("[ContentView] Processing frame \(frameCount) in continuous mode")
             
             if modelManager.running {
                 print("[ContentView] Model is busy, skipping frame \(frameCount)")
@@ -342,6 +377,7 @@ struct ContentView: View {
             }
             
             print("[ContentView] Starting inference for frame \(frameCount)")
+            processedFramesInWindow += 1
             
             let userInput = UserInput(
                 prompt: .text("\(prompt) \(promptSuffix)"),
@@ -368,14 +404,17 @@ struct ContentView: View {
     func distributeVideoFrames() async {
         print("[ContentView] Starting distributeVideoFrames for camera type: \(selectedCameraType.rawValue)")
         
-        // attach a stream to the camera -- this code will read this
-        let frames = AsyncStream<CMSampleBuffer>(bufferingPolicy: .bufferingNewest(1)) {
+        await MainActor.run {
+            self.framesToDisplay = nil
+        }
+        
+        let frames = AsyncStream<CMSampleBuffer>(bufferingPolicy: .bufferingOldest(1)) { // Changed from bufferingNewest
             camera.attach(continuation: $0)
         }
 
         let (framesToDisplay, framesToDisplayContinuation) = AsyncStream.makeStream(
             of: CVImageBuffer.self,
-            bufferingPolicy: .bufferingNewest(1)
+            bufferingPolicy: .bufferingOldest(1) // Changed from bufferingNewest
         )
         
         // Update UI on main actor
@@ -386,7 +425,7 @@ struct ContentView: View {
         // Only create analysis stream if in continuous mode
         let (framesToAnalyze, framesToAnalyzeContinuation) = AsyncStream.makeStream(
             of: CVImageBuffer.self,
-            bufferingPolicy: .bufferingNewest(1)
+            bufferingPolicy: .bufferingOldest(1) // Changed from bufferingNewest
         )
 
         // set up structured tasks (important -- this means the child tasks
@@ -399,10 +438,38 @@ struct ContentView: View {
                     framesToAnalyzeContinuation.finish()
                 }
                 
+                var frameCount = 0
+                var lastMemoryCheck = Date()
+                
                 for await sampleBuffer in frames {
                     if Task.isCancelled {
                         print("[ContentView] Frame distribution cancelled")
                         break
+                    }
+                    
+                    frameCount += 1
+                    
+                    let now = Date()
+                    if now.timeIntervalSince(lastMemoryCheck) > 5.0 { // Check every 5 seconds
+                        lastMemoryCheck = now
+                        
+                        // Simple memory pressure check
+                        let memoryPressure = ProcessInfo.processInfo.thermalState
+                        if memoryPressure != .nominal {
+                            print("[ContentView] System under pressure: \(memoryPressure) - reducing frame rate")
+                            // Skip more frames when under pressure
+                            if frameCount % 5 != 0 {
+                                continue
+                            }
+                        }
+                        
+                        let currentMemory = await MainActor.run { memoryMonitor.memoryUsageMB }
+                        if currentMemory > 5500 { // More than 5.5GB used
+                            print("[ContentView] High memory usage (\(Int(currentMemory))MB), skipping frames")
+                            if frameCount % 3 != 0 {
+                                continue
+                            }
+                        }
                     }
                     
                     if let frame = sampleBuffer.imageBuffer {
@@ -412,8 +479,11 @@ struct ContentView: View {
                         let currentCameraType = await MainActor.run { selectedCameraType }
                         let isModelRunning = await MainActor.run { modelManager.running }
                         
-                        if currentCameraType == .continuous && !isModelRunning {
-                            framesToAnalyzeContinuation.yield(frame)
+                        if currentCameraType == .continuous && !isModelRunning && frameCount % 15 == 0 {
+                            let analysisMemory = await MainActor.run { memoryMonitor.memoryUsageMB }
+                            if analysisMemory < 5000 { // Only if under 5GB
+                                framesToAnalyzeContinuation.yield(frame)
+                            }
                         }
                     }
                 }
@@ -433,8 +503,8 @@ struct ContentView: View {
         // Clean up when done
         await MainActor.run {
             self.framesToDisplay = nil
-            self.camera.detatch()
         }
+        camera.detatch()
         
         print("[ContentView] distributeVideoFrames completed")
     }

@@ -27,10 +27,18 @@ struct DebugView: View {
                     .font(.caption)
                 }
                 
-                Section("Secondary Model Information") {
+                // Section("Secondary Model Information") {
+                //     VStack(alignment: .leading, spacing: 8) {
+                //         Text("Secondary Model: \(modelManager.secondaryModelInfo)")
+                //         Text("All Models Status: \(modelManager.allModelsStatus)")
+                //     }
+                //     .font(.caption)
+                // }
+                
+                Section("Model Status") {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Secondary Model: \(modelManager.secondaryModelInfo)")
                         Text("All Models Status: \(modelManager.allModelsStatus)")
+                        Text("Memory Usage: \(modelManager.memoryStatus)")
                     }
                     .font(.caption)
                 }
@@ -48,6 +56,7 @@ struct DebugView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Physical Memory: \(ProcessInfo.processInfo.physicalMemory / 1024 / 1024) MB")
                         Text("Active Processor Count: \(ProcessInfo.processInfo.activeProcessorCount)")
+                        Text("Thermal State: \(ProcessInfo.processInfo.thermalState.description)")
                         #if os(iOS)
                         Text("Available Memory: \(os_proc_available_memory() / 1024 / 1024) MB")
                         #endif
@@ -82,6 +91,13 @@ struct DebugView: View {
                         autoRefresh.toggle()
                     }
                 }
+                
+                ToolbarItem(placement: .secondaryAction) {
+                    Button("Clear MLX Cache") {
+                        MLX.GPU.clearCache()
+                        refreshDebugInfo()
+                    }
+                }
             }
             .onAppear {
                 refreshDebugInfo()
@@ -99,10 +115,24 @@ struct DebugView: View {
         debugInfo.append("Refreshed at \(timestamp)")
         debugInfo.append("Current Model: \(modelManager.selectedModelType.rawValue)")
         debugInfo.append("Models Status: \(modelManager.allModelsStatus)")
+        debugInfo.append("Memory: \(modelManager.memoryStatus)")
+        debugInfo.append("GPU Peak: \(MLX.GPU.peakMemory / 1024 / 1024) MB")
         
         // Keep only last 50 debug entries
         if debugInfo.count > 50 {
             debugInfo.removeFirst(debugInfo.count - 50)
+        }
+    }
+}
+
+extension ProcessInfo.ThermalState {
+    var description: String {
+        switch self {
+        case .nominal: return "Nominal"
+        case .fair: return "Fair"
+        case .serious: return "Serious"
+        case .critical: return "Critical"
+        @unknown default: return "Unknown"
         }
     }
 }
