@@ -30,22 +30,37 @@ There are 3 pretrained sizes of FastVLM to choose from:
 - **FastVLM 1.5B**: Well balanced - great for larger devices where speed and accuracy matters.
 - **FastVLM 7B**: Fast and accurate - ideal for situations where accuracy matters over speed.
 
-To download any FastVLM listed above, use the [get_pretrained_mlx_model.sh](get_pretrained_mlx_model.sh) script. The script downloads the model from the web and places it in the appropriate location. Once a model has been downloaded using the steps below, no additional steps are needed to build the app in Xcode.
+To download any FastVLM listed above, use one of the provided scripts. The scripts download the model from the web and place it in the appropriate location.
 
-To explore how the other models work for your use-case, simply re-run the `get_pretrained_mlx_model.sh` with the new model selected, follow the prompts, and rebuild your app in Xcode.
+- [`get_pretrained_mlx_model.sh`](get_pretrained_mlx_model.sh): Uses `wget` to download the model.
+- [`get_pretrained_mlx_model_curl.sh`](get_pretrained_mlx_model_curl.sh): Uses `curl` to download the model. Use this if you do not have `wget` installed.
+
+Once a model has been downloaded using the steps below, no additional steps are needed to build the app in Xcode.
+
+To explore how the other models work for your use-case, simply re-run the appropriate script with the new model selected, follow the prompts, and rebuild your app in Xcode.
 
 ### Download Instructions
 
-1. Make the script executable
+The download script comes in two versions: one using `wget` and another using `curl`. Choose the one appropriate for your system.
+
+1. Make the chosen script executable
 
 ```shell
+# If you have wget
 chmod +x app/get_pretrained_mlx_model.sh
+
+# If you have curl
+chmod +x app/get_pretrained_mlx_model_curl.sh
 ```
 
 2. Download FastVLM
 
 ```shell
+# Using wget
 app/get_pretrained_mlx_model.sh --model 0.5b --dest app/FastVLM/model
+
+# Using curl
+app/get_pretrained_mlx_model_curl.sh --model 0.5b --dest app/FastVLM/model
 ```
 
 3. Open the app in Xcode, Build, and Run.
