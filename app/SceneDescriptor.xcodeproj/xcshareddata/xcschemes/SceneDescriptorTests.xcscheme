@@ -54,15 +54,6 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "019A3E092D78E6A00055F93B"
-            BuildableName = "SceneDescriptor App.app"
-            BlueprintName = "SceneDescriptor App"
-            ReferencedContainer = "container:SceneDescriptor.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

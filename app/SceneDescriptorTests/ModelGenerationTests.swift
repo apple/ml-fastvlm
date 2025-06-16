@@ -15,16 +15,21 @@ class ModelGenerationTests: XCTestCase {
     
     override func setUp() async throws {
         try await super.setUp()
+        
+        #if targetEnvironment(simulator)
+        throw XCTSkip("ModelGenerationTests require physical device with GPU")
+        #endif
+        
         modelManager = ModelManager()
     }
     
     override func tearDown() {
-        modelManager.cancel()
+        modelManager?.cancel()
         modelManager = nil
         super.tearDown()
     }
     
-    // MARK: - User Input Creation Tests
+    // MARK: - User Input Creation Tests (Safe for Simulator)
     
     func testUserInputWithTextPrompt() {
         let userInput = UserInput(prompt: .text("Describe this image"), images: [])

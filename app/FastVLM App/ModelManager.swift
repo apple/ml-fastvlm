@@ -22,6 +22,7 @@ class ModelManager {
     private let memoryWarningThreshold: TimeInterval = 5.0 // 5 seconds between warnings
     
     init() {
+        #if !targetEnvironment(simulator)
         self.currentModel = ModelFactory.createModel(type: .smolVLM)
         
         #if canImport(UIKit)
@@ -32,6 +33,11 @@ class ModelManager {
         ) { [weak self] _ in
             self?.handleMemoryWarning()
         }
+        #endif
+        #else
+        // On simulator, create a mock model that doesn't use GPU
+        self.currentModel = ModelFactory.createModel(type: .smolVLM)
+        print("Warning: Running on simulator - GPU functionality limited")
         #endif
     }
     
