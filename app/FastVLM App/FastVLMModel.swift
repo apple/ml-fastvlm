@@ -128,6 +128,21 @@ class FastVLMModel: VLMModelProtocol {
                     let llmStart = Date()
                     let input = try await context.processor.prepare(input: userInput)
                     
+                    print("[FastVLM Debug] === Input Preparation ===")
+                    let textInput = input.text
+                    print("[FastVLM Debug] Text tokens shape: \(textInput.tokens.shape)")
+                    print("[FastVLM Debug] First 20 tokens: \(Array(textInput.tokens.asArray(Int32.self).prefix(20)))")
+                    
+                    // Decode first few tokens to see what text we're sending
+                    let firstTokens = Array(textInput.tokens.flattened().asArray(Int32.self).prefix(50))
+                    let decodedText = context.tokenizer.decode(tokens: firstTokens.map(Int.init))
+                    print("[FastVLM Debug] Decoded input text: '\(decodedText)'")
+                    
+                    if input.image != nil {
+                        print("[FastVLM Debug] Image input present: \(input.image!.pixels.shape)")
+                    }
+                    print("[FastVLM Debug] === End Input Debug ===")
+
                     var seenFirstToken = false
 
                     // FastVLM generates the output

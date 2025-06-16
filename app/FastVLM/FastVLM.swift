@@ -376,15 +376,13 @@ public class FastVLMProcessor: UserInputProcessor {
             messages = [["role": "user", "content": ""]]
         }
         
-        if let firstMessage = messages.first,
-           firstMessage["role"] as? String != "system" {
-            messages.insert(["role": "system", "content": "You are a helpful assistant."], at: 0)
-        }
-
+        // The tokenizer's chat template will add the system message automatically
+        
         let lastIndex = messages.count - 1
-        var lastMessage = (messages[lastIndex]["content"] as? String) ?? ""
+        var lastMessage = messages[lastIndex]
+        var lastContent = (lastMessage["content"] as? String) ?? ""
 
-        // processing_llava.py
+        // Add image tokens at the beginning of the user message if image is present
         if let imageTHW {
             let height = imageTHW.h
             let width = imageTHW.w
@@ -393,25 +391,38 @@ public class FastVLMProcessor: UserInputProcessor {
             var numImageTokens =
                 (height / patchSize) * (width / patchSize) + config.numAdditionalImageTokens
 
-            if config.visionFeatureSelectStrategy == .default {
+            if config.visionFeatureSelectStrategy == .`default` {
                 numImageTokens -= 1
             }
 
-            lastMessage += Array(repeating: config.imageToken, count: numImageTokens)
-                .joined()
+            let imageTokens = Array(repeating: config.imageToken, count: numImageTokens).joined()
+            
+            lastContent = imageTokens + lastContent
         }
 
-        messages[lastIndex]["content"] = lastMessage
+        lastMessage["content"] = lastContent
+        messages[lastIndex] = lastMessage
 
-        return
-            messages
-            .map { message in
-                let role = (message["role"] as? String) ?? "user"
-                let content = (message["content"] as? String) ?? ""
-                return "<|im_start|>\(role)\n\(content)<|im_end|>"
-            }
-            .joined(separator: "\n")
-            + "\n<|im_start|>assistant\n"
+        // The tokenizer expects this exact format
+        var chatText = ""
+        
+        // Add system message only if not already present
+        if messages.first?["role"] as? String != "system" {
+            chatText += "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n"
+        }
+        
+        // Add all messages
+        for message in messages {
+            let role = (message["role"] as? String) ?? "user"
+            let content = (message["content"] as? String) ?? ""
+            chatText += "<|im_start|>\(role)\n\(content)<|im_end|>\n"
+        }
+        
+        // Add generation prompt
+        chatText += "<|im_start|>assistant\n"
+        
+        print("[FastVLM Debug] Prepared chat text: '\(chatText.prefix(200))...'")
+        return chatText
     }
 
     public func prepare(input: UserInput) throws -> LMInput {
@@ -541,13 +552,27 @@ public class FastVLM: Module, VLMModel, KVCacheDimensionProvider {
         let imageTokenIndex = config.baseConfiguration.imageTokenId
 
         var imageIndices = [Int]()
-        for (i, v) in inputIds.asArray(Int.self).enumerated() {
+        let inputIdsArray = inputIds.asArray(Int.self)
+        
+        // Find all image token positions
+        for (i, v) in inputIdsArray.enumerated() {
             if v == imageTokenIndex {
                 imageIndices.append(i)
             }
         }
 
-        inputEmbeds[0..., MLXArray(imageIndices), 0...] = imageFeatures
+        // Debug print to see what's happening
+        print("[FastVLM Debug] Input IDs: \(inputIdsArray.prefix(20))")
+        print("[FastVLM Debug] Image token index: \(imageTokenIndex)")
+        print("[FastVLM Debug] Found image token positions: \(imageIndices)")
+        print("[FastVLM Debug] Image features shape: \(imageFeatures.shape)")
+        
+        // Ensure we have the right number of image features for the image tokens
+        if !imageIndices.isEmpty && imageFeatures.dim(1) >= imageIndices.count {
+            let imageFeatureSlice = imageFeatures[0..., 0..<imageIndices.count, 0...]
+            inputEmbeds[0..., MLXArray(imageIndices), 0...] = imageFeatureSlice
+        }
+        
         return inputEmbeds
     }
 
@@ -611,7 +636,7 @@ public struct FastVLMConfiguration: Codable, Sendable {
         public var ropeTraditional: Bool { _ropeTraditional ?? false }
         public let _ropeScaling: [String: StringOrNumber]?
         public var ropeScaling: [String: StringOrNumber]? {
-            _ropeScaling ?? ["mrope_section": .ints([2, 1, 1])]
+            _ropeScaling ?? ["mrope_section": .ints([16, 16, 16])]
         }
         private let _tieWordEmbeddings: Bool?
         public var tieWordEmbeddings: Bool { _tieWordEmbeddings ?? true }
@@ -706,6 +731,6 @@ public struct FastVLMProcessorConfiguration: Codable, Sendable {
     public var imageToken = "<image>"
     public var numAdditionalImageTokens = 0
     public var patchSize = 64
-    public var visionFeatureSelectStrategy: Strategy?
+    public var visionFeatureSelectStrategy: Strategy? = nil
 
 }

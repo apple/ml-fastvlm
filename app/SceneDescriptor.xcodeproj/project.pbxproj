@@ -1282,7 +1282,7 @@
 				019A3E172D78E6A20055F93B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		2AAE48492E0065E500870D4E /* Build configuration list for PBXNativeTarget "SceneDescriptorTests" */ = {
 			isa = XCConfigurationList;
@@ -1291,7 +1291,7 @@
 				2AAE484B2E0065E500870D4E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		C35372BA2D08C32D00474D34 /* Build configuration list for PBXNativeTarget "Video" */ = {
 			isa = XCConfigurationList;
@@ -1300,7 +1300,7 @@
 				C35372B82D08C32D00474D34 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		C35EDB672D07699400757E80 /* Build configuration list for PBXProject "SceneDescriptor" */ = {
 			isa = XCConfigurationList;
@@ -1309,7 +1309,7 @@
 				C35EDB692D07699400757E80 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		C39BB3FF2D79082A005DB8FB /* Build configuration list for PBXNativeTarget "FastVLM" */ = {
 			isa = XCConfigurationList;
@@ -1318,7 +1318,7 @@
 				C39BB3FC2D79082A005DB8FB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
