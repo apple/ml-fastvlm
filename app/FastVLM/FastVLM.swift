@@ -366,6 +366,11 @@ public class FastVLMProcessor: UserInputProcessor {
             messages = [["role": "user", "content": text]]
         case .messages(let messageArray):
             messages = messageArray
+        case .chat(let chatMessages):
+            // Convert chat messages to the expected format
+            messages = chatMessages.map { message in
+                ["role": "user", "content": "\(message)"]
+            }
         @unknown default:
             // Handle any other cases by treating as empty user message
             messages = [["role": "user", "content": ""]]

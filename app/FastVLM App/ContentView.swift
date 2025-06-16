@@ -433,12 +433,12 @@ struct ContentView: View {
                 images: [.ciImage(CIImage(cvPixelBuffer: frame))]
             )
             
-            let t = await modelManager.generate(userInput)
-            let result = await t.result
-            
-            await MainActor.run {
-                if !modelManager.output.isEmpty {
-                    speechManager.speakIfAutoEnabled(modelManager.output)
+            Task {
+                _ = await modelManager.generate(userInput)
+                await MainActor.run {
+                    if !modelManager.output.isEmpty {
+                        speechManager.speakIfAutoEnabled(modelManager.output)
+                    }
                 }
             }
             
@@ -566,7 +566,7 @@ struct ContentView: View {
         )
 
         Task {
-            await modelManager.generate(userInput)
+            _ = await modelManager.generate(userInput)
             await MainActor.run {
                 if !modelManager.output.isEmpty {
                     speechManager.speakIfAutoEnabled(modelManager.output)

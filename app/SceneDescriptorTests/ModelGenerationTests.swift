@@ -43,6 +43,8 @@ class ModelGenerationTests: XCTestCase {
             XCTAssertEqual(text, "Describe this image")
         case .messages(_):
             XCTFail("Expected text prompt, got messages")
+        case .chat(_):
+            XCTFail("Expected text prompt, got chat")
         @unknown default:
             XCTFail("Unknown prompt type")
         }
@@ -68,6 +70,8 @@ class ModelGenerationTests: XCTestCase {
             }
         case .text(_):
             XCTFail("Expected messages prompt, got text")
+        case .chat(_):
+            XCTFail("Expected messages prompt, got chat")
         @unknown default:
             XCTFail("Unknown prompt type")
         }
@@ -84,6 +88,18 @@ class ModelGenerationTests: XCTestCase {
         XCTAssertNotNil(userInput)
         XCTAssertEqual(userInput.images.count, 1)
         
+        // Test prompt extraction
+        switch userInput.prompt {
+        case .text(let text):
+            XCTAssertEqual(text, "What color is this?")
+        case .messages(_):
+            XCTFail("Expected text prompt, got messages")
+        case .chat(_):
+            XCTFail("Expected text prompt, got chat")
+        @unknown default:
+            XCTFail("Unknown prompt type")
+        }
+        
         // Test image type
         switch userInput.images[0] {
         case .ciImage(let ciImage):
@@ -93,6 +109,8 @@ class ModelGenerationTests: XCTestCase {
             XCTFail("Expected CIImage, got URL")
         case .array(_):
             XCTFail("Expected CIImage, got array")
+        @unknown default:
+            XCTFail("Unknown image type")
         }
     }
     
@@ -106,6 +124,18 @@ class ModelGenerationTests: XCTestCase {
         )
         
         XCTAssertEqual(userInput.images.count, 2)
+        
+        // Test prompt extraction
+        switch userInput.prompt {
+        case .text(let text):
+            XCTAssertEqual(text, "Compare these images")
+        case .messages(_):
+            XCTFail("Expected text prompt, got messages")
+        case .chat(_):
+            XCTFail("Expected text prompt, got chat")
+        @unknown default:
+            XCTFail("Unknown prompt type")
+        }
     }
     
     // MARK: - Model State Tests
@@ -217,6 +247,29 @@ class ModelGenerationTests: XCTestCase {
         XCTAssertNotNil(userInputURL)
         XCTAssertEqual(userInputCIImage.images.count, 1)
         XCTAssertEqual(userInputURL.images.count, 1)
+        
+        // Test prompt extraction
+        switch userInputCIImage.prompt {
+        case .text(let text):
+            XCTAssertEqual(text, "Test")
+        case .messages(_):
+            XCTFail("Expected text prompt, got messages")
+        case .chat(_):
+            XCTFail("Expected text prompt, got chat")
+        @unknown default:
+            XCTFail("Unknown prompt type")
+        }
+        
+        switch userInputURL.prompt {
+        case .text(let text):
+            XCTAssertEqual(text, "Test")
+        case .messages(_):
+            XCTFail("Expected text prompt, got messages")
+        case .chat(_):
+            XCTFail("Expected text prompt, got chat")
+        @unknown default:
+            XCTFail("Unknown prompt type")
+        }
     }
     
     // MARK: - Error Handling Tests
@@ -258,6 +311,18 @@ class ModelGenerationTests: XCTestCase {
                     images: [.ciImage(testImage)]
                 )
                 XCTAssertNotNil(userInput)
+                
+                // Test prompt extraction
+                switch userInput.prompt {
+                case .text(let text):
+                    XCTAssertEqual(text, "Test prompt \(i)")
+                case .messages(_):
+                    XCTFail("Expected text prompt, got messages")
+                case .chat(_):
+                    XCTFail("Expected text prompt, got chat")
+                @unknown default:
+                    XCTFail("Unknown prompt type")
+                }
             }
         }
     }

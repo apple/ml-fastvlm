@@ -105,7 +105,7 @@ class SmolVLMModel: VLMModelProtocol {
             throw SmolVLMError.configurationError("Failed to read config.json")
         }
         
-        guard var config = try? JSONSerialization.jsonObject(with: configData) as? [String: Any] else {
+        guard let config = try? JSONSerialization.jsonObject(with: configData) as? [String: Any] else {
             throw SmolVLMError.configurationError("Failed to parse config.json")
         }
         
@@ -313,6 +313,14 @@ class SmolVLMModel: VLMModelProtocol {
                         } else {
                             userPromptText = hasVideo ? configuration.videoUserPrompt : configuration.photoUserPrompt
                         }
+                    case .chat(let chatMessages):
+                        // Extract text from chat messages if available
+                        if let lastMessage = chatMessages.last {
+                            let content = "\(lastMessage)" // Convert to string representation
+                            userPromptText = content.isEmpty ? (hasVideo ? configuration.videoUserPrompt : configuration.photoUserPrompt) : content
+                        } else {
+                            userPromptText = hasVideo ? configuration.videoUserPrompt : configuration.photoUserPrompt
+                        }
                     @unknown default:
                         userPromptText = hasVideo ? configuration.videoUserPrompt : configuration.photoUserPrompt
                     }
@@ -330,6 +338,9 @@ class SmolVLMModel: VLMModelProtocol {
                         case .array(let array):
                             // Keep array as-is for now
                             return .array(array)
+                        @unknown default:
+                            // Handle any unknown cases
+                            return image
                         }
                     }
                     
@@ -379,7 +390,7 @@ class SmolVLMModel: VLMModelProtocol {
                         topP: configuration.topP
                     )
                     
-                    print("[SmolVLM Debug] Generation parameters: temp=\(generationParameters.temperature ?? 0), topP=\(generationParameters.topP ?? 0)")
+                    print("[SmolVLM Debug] Generation parameters: temp=\(configuration.temperature), topP=\(configuration.topP)")
                     
                     return try MLXLMCommon.generate(
                         input: input,

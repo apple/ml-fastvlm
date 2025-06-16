@@ -255,14 +255,13 @@ struct EnhancedContentView: View {
             } else {
                 Button("Generate") {
                     Task {
-                        let userPrompt = UserInput.Prompt.text(promptText)
                         
                         // Change from: userInput.prompt.text.isEmpty
                         // To: check the promptText string directly
                         if promptText.isEmpty {
                             // Handle empty prompt
                         } else {
-                            await modelManager.generate(userInput)
+                            _ = await modelManager.generate(userInput)
                         }
                     }
                 }
