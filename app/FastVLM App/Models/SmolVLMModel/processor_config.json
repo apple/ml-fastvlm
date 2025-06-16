@@ -1,0 +1,4 @@
+{
+  "image_seq_len": 64,
+  "processor_class": "SmolVLMProcessor"
+}

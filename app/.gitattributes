@@ -1,2 +1,1 @@
 add filter=lfs diff=lfs merge=lfs -text
-FastVLM[[:space:]]App/Models/SmolVLMModel/model.safetensors filter=lfs diff=lfs merge=lfs -text

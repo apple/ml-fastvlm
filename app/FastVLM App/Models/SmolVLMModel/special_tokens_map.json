@@ -1,0 +1,39 @@
+{
+  "additional_special_tokens": [
+    "<fake_token_around_image>",
+    "<image>",
+    "<end_of_utterance>"
+  ],
+  "bos_token": {
+    "content": "<|im_start|>",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  },
+  "end_of_utterance_token": "<end_of_utterance>",
+  "eos_token": {
+    "content": "<end_of_utterance>",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  },
+  "fake_image_token": "<fake_token_around_image>",
+  "global_image_token": "<global-img>",
+  "image_token": "<image>",
+  "pad_token": {
+    "content": "<|im_end|>",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  },
+  "unk_token": {
+    "content": "<|endoftext|>",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  }
+}

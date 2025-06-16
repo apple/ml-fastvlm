@@ -1,0 +1,141 @@
+{
+  "architectures": [
+    "SmolVLMForConditionalGeneration"
+  ],
+  "image_token_id": 49190,
+  "model_type": "smolvlm",
+  "pad_token_id": 128002,
+  "scale_factor": 4,
+  "text_config": {
+    "_flash_attn_2_enabled": true,
+    "_name_or_path": "None",
+    "architectures": [
+      "VLlama3ForCausalLM"
+    ],
+    "head_dim": 64,
+    "hidden_size": 960,
+    "intermediate_size": 2560,
+    "is_llama_config": true,
+    "max_position_embeddings": 8192,
+    "model_type": "llama",
+    "neftune_noise_alpha": 0.0,
+    "num_attention_heads": 15,
+    "num_hidden_layers": 32,
+    "num_key_value_heads": 5,
+    "pad_token_id": 2,
+    "perceiver_config": {
+      "_attn_implementation_autoset": false,
+      "_name_or_path": "",
+      "add_cross_attention": false,
+      "architectures": null,
+      "attention_dropout": 0.0,
+      "bad_words_ids": null,
+      "begin_suppress_tokens": null,
+      "bos_token_id": null,
+      "chunk_size_feed_forward": 0,
+      "cross_attention_hidden_size": null,
+      "decoder_start_token_id": null,
+      "diversity_penalty": 0.0,
+      "do_sample": false,
+      "early_stopping": false,
+      "encoder_no_repeat_ngram_size": 0,
+      "eos_token_id": null,
+      "exponential_decay_length_penalty": null,
+      "finetuning_task": null,
+      "forced_bos_token_id": null,
+      "forced_eos_token_id": null,
+      "hidden_act": "silu",
+      "id2label": {
+        "0": "LABEL_0",
+        "1": "LABEL_1"
+      },
+      "is_decoder": false,
+      "is_encoder_decoder": false,
+      "label2id": {
+        "LABEL_0": 0,
+        "LABEL_1": 1
+      },
+      "length_penalty": 1.0,
+      "max_length": 20,
+      "min_length": 0,
+      "model_type": "vllama3",
+      "no_repeat_ngram_size": 0,
+      "num_beam_groups": 1,
+      "num_beams": 1,
+      "num_key_value_heads": 1,
+      "num_return_sequences": 1,
+      "output_attentions": false,
+      "output_hidden_states": false,
+      "output_scores": false,
+      "pad_token_id": null,
+      "prefix": null,
+      "problem_type": null,
+      "pruned_heads": {},
+      "qk_layer_norms_perceiver": false,
+      "remove_invalid_values": false,
+      "repetition_penalty": 1.0,
+      "resampler_depth": 6,
+      "resampler_head_dim": 96,
+      "resampler_n_heads": 16,
+      "resampler_n_latents": 64,
+      "return_dict": true,
+      "return_dict_in_generate": false,
+      "sep_token_id": null,
+      "suppress_tokens": null,
+      "task_specific_params": null,
+      "temperature": 1.0,
+      "tf_legacy_loss": false,
+      "tie_encoder_decoder": false,
+      "tie_word_embeddings": true,
+      "tokenizer_class": null,
+      "top_k": 50,
+      "top_p": 1.0,
+      "torch_dtype": null,
+      "torchscript": false,
+      "transformers_version": "4.46.0",
+      "typical_p": 1.0,
+      "use_bfloat16": false
+    },
+    "pixel_shuffle_factor": 4,
+    "qk_layer_norms": false,
+    "rms_norm_eps": 1e-05,
+    "rope_interleaved": false,
+    "rope_theta": 100000,
+    "torch_dtype": "bfloat16",
+    "transformers.js_config": {
+      "kv_cache_dtype": {
+        "fp16": "float16",
+        "q4f16": "float16"
+      }
+    },
+    "use_resampler": false,
+    "vocab_size": 49280
+  },
+  "tie_word_embeddings": false,
+  "torch_dtype": "float32",
+  "transformers.js_config": {
+    "kv_cache_dtype": {
+      "fp16": "float16",
+      "q4f16": "float16"
+    }
+  },
+  "transformers_version": "4.47.1",
+  "use_cache": false,
+  "use_reentrant_checkpointing": false,
+  "vision_config": {
+    "hidden_size": 768,
+    "image_size": 512,
+    "max_image_size": {
+      "longest_edge": 512
+    },
+    "model_type": "smolvlm_vision",
+    "num_attention_heads": 12,
+    "patch_size": 16,
+    "size": {
+      "longest_edge": 2048
+    },
+    "tie_word_embeddings": false,
+    "use_base_siglip": false
+  },
+  "vocab_size": 49280
+}
