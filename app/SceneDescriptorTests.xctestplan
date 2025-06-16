@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "D2C8E8F0-5E4A-4B8F-9A1B-3C2D1E0F9A8B",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SceneDescriptor.xcodeproj",
+        "identifier" : "SceneDescriptorTests",
+        "name" : "SceneDescriptorTests"
+      }
+    }
+  ],
+  "version" : 1
+}
