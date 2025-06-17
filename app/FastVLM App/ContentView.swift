@@ -24,6 +24,7 @@ struct ContentView: View {
     @State private var modelManager = ModelManager()
     @State private var memoryMonitor = MemoryMonitor()
     @State private var speechManager = SpeechManager()
+    @EnvironmentObject private var appStateManager: AppStateManager
 
     /// stream of frames -> VideoFrameView, see distributeVideoFrames
     @State private var framesToDisplay: AsyncStream<CVImageBuffer>?
@@ -43,6 +44,9 @@ struct ContentView: View {
     @State private var frameDistributionTask: Task<Void, Never>? = nil
     
     @State private var cameraTypeChangeTimer: Timer?
+    
+    @State private var isInitialized = false
+    @State private var showingCrashRecoveryAlert = false
 
     var statusTextColor: Color {
         guard let fastVLMModel = modelManager.currentModel as? FastVLMModel else {
@@ -69,6 +73,10 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if appStateManager.isRecoveringFromCrash {
+                    crashRecoveryBanner
+                }
+                
                 cameraSection
                 promptSections
                 responseSection
@@ -77,27 +85,15 @@ struct ContentView: View {
             .listSectionSpacing(0)
             #endif
             .task {
-                camera.start()
-            }
-            .task {
-                await modelManager.loadCurrentModel()
+                await initializeApp()
             }
             .onAppear {
-                #if canImport(UIKit)
-                UIApplication.shared.isIdleTimerDisabled = true
-                #endif
-                memoryMonitor.startMonitoring()
-                modelManager.setSpeechManager(speechManager)
+                if !isInitialized {
+                    setupAppearance()
+                }
             }
             .onDisappear {
-                #if canImport(UIKit)
-                UIApplication.shared.isIdleTimerDisabled = false
-                #endif
-                cameraTypeChangeTimer?.invalidate()
-                frameDistributionTask?.cancel()
-                camera.stop()
-                modelManager.cancel()
-                memoryMonitor.stopMonitoring()
+                cleanupOnDisappear()
             }
             .task {
                 frameDistributionTask = Task {
@@ -116,7 +112,8 @@ struct ContentView: View {
                 prompt: $prompt,
                 promptSuffix: $promptSuffix,
                 showingDebugView: $showingDebugView,
-                showingSpeechSettings: $showingSpeechSettings
+                showingSpeechSettings: $showingSpeechSettings,
+                appStateManager: appStateManager
             ))
             .sheet(isPresented: $isShowingInfo) {
                 InfoView()
@@ -130,6 +127,99 @@ struct ContentView: View {
             .sheet(isPresented: $showingSpeechSettings) {
                 SpeechSettingsView(speechManager: speechManager)
             }
+            .alert("App Recovery", isPresented: $showingCrashRecoveryAlert) {
+                Button("OK") {
+                    showingCrashRecoveryAlert = false
+                }
+            } message: {
+                Text(appStateManager.crashRecoveryMessage)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .appEnteredBackground)) { _ in
+                handleAppEnteredBackground()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .memoryPressureDetected)) { _ in
+                handleMemoryPressure()
+            }
+        }
+    }
+    
+    private var crashRecoveryBanner: some View {
+        Section {
+            HStack {
+                Image(systemName: "arrow.clockwise.circle.fill")
+                    .foregroundColor(.orange)
+                VStack(alignment: .leading) {
+                    Text("App Restarted")
+                        .font(.headline)
+                        .foregroundColor(.orange)
+                    Text(appStateManager.crashRecoveryMessage)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.vertical, 4)
+        }
+        .listRowBackground(Color.orange.opacity(0.1))
+    }
+    
+    private func initializeApp() async {
+        guard !isInitialized else { return }
+        
+        if appStateManager.isRecoveringFromCrash && !appStateManager.crashRecoveryMessage.isEmpty {
+            showingCrashRecoveryAlert = true
+        }
+        
+        camera.start()
+        
+        do {
+            await modelManager.loadCurrentModel()
+        } catch {
+            print("[ContentView] Error loading model: \(error)")
+        }
+        
+        isInitialized = true
+    }
+    
+    private func setupAppearance() {
+        #if canImport(UIKit)
+        UIApplication.shared.isIdleTimerDisabled = true
+        #endif
+        memoryMonitor.startMonitoring()
+        modelManager.setSpeechManager(speechManager)
+    }
+    
+    private func cleanupOnDisappear() {
+        #if canImport(UIKit)
+        UIApplication.shared.isIdleTimerDisabled = false
+        #endif
+        cameraTypeChangeTimer?.invalidate()
+        frameDistributionTask?.cancel()
+        camera.stop()
+        modelManager.cancel()
+        memoryMonitor.stopMonitoring()
+        
+        appStateManager.markCleanShutdown()
+    }
+    
+    private func handleAppEnteredBackground() {
+        modelManager.cancel()
+        frameDistributionTask?.cancel()
+        
+        speechManager.stop()
+        
+        print("[ContentView] App entered background - cleaned up resources")
+    }
+    
+    private func handleMemoryPressure() {
+        print("[ContentView] Memory pressure detected - performing cleanup")
+        
+        modelManager.cancel()
+        
+        speechManager.stop()
+        
+        Task { @MainActor in
+            modelManager.currentModel.output = ""
         }
     }
     
@@ -566,6 +656,7 @@ struct NavigationBarModifier: ViewModifier {
     @Binding var promptSuffix: String
     @Binding var showingDebugView: Bool
     @Binding var showingSpeechSettings: Bool
+    let appStateManager: AppStateManager
     
     func body(content: Content) -> some View {
         content
@@ -610,6 +701,13 @@ struct NavigationBarModifier: ViewModifier {
                         } label: {
                             Image(systemName: "speaker.wave.2")
                         }
+                        
+                        Button {
+                            appStateManager.forceRestart()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .foregroundColor(.orange)
                     }
                 }
                 #else
@@ -632,6 +730,13 @@ struct NavigationBarModifier: ViewModifier {
                         } label: {
                             Image(systemName: "speaker.wave.2")
                         }
+                        
+                        Button {
+                            appStateManager.forceRestart()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .foregroundColor(.orange)
                     }
                 }
                 #endif
@@ -672,6 +777,7 @@ struct NavigationBarModifier: ViewModifier {
 
 #Preview {
     ContentView()
+        .environmentObject(AppStateManager())
 }
 
 private extension ContentView {

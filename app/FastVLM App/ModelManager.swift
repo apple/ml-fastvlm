@@ -23,10 +23,23 @@ class ModelManager {
     private var lastMemoryWarning: Date?
     private let memoryWarningThreshold: TimeInterval = 5.0 // 5 seconds between warnings
     
+    private var isRecovering = false
+    private var recoveryAttempts = 0
+    private let maxRecoveryAttempts = 3
+    
     init() {
         #if !targetEnvironment(simulator)
         self.currentModel = ModelFactory.createModel(type: .smolVLM)
         
+        setupNotificationObservers()
+        #else
+        // On simulator, create a mock model that doesn't use GPU
+        self.currentModel = ModelFactory.createModel(type: .smolVLM)
+        print("Warning: Running on simulator - GPU functionality limited")
+        #endif
+    }
+    
+    private func setupNotificationObservers() {
         #if canImport(UIKit)
         NotificationCenter.default.addObserver(
             forName: UIApplication.didReceiveMemoryWarningNotification,
@@ -38,11 +51,26 @@ class ModelManager {
             }
         }
         #endif
-        #else
-        // On simulator, create a mock model that doesn't use GPU
-        self.currentModel = ModelFactory.createModel(type: .smolVLM)
-        print("Warning: Running on simulator - GPU functionality limited")
-        #endif
+        
+        NotificationCenter.default.addObserver(
+            forName: .appEnteredBackground,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleAppEnteredBackground()
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: .memoryPressureDetected,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleMemoryPressure()
+            }
+        }
     }
     
     func setSpeechManager(_ speechManager: SpeechManager) {
@@ -67,6 +95,9 @@ class ModelManager {
         // Cancel any running generation
         currentModel.cancel()
         
+        // Clear output to free memory
+        currentModel.output = ""
+        
         // Force garbage collection
         Task {
             // Small delay to allow cancellation
@@ -74,7 +105,96 @@ class ModelManager {
             
             // Trigger MLX cleanup
             MLX.GPU.clearCache()
+            
+            // If memory pressure is severe, consider reloading model
+            if getUsedMemory() > 7000 * 1024 * 1024 { // 7GB
+                await performEmergencyRecovery()
+            }
         }
+    }
+    
+    private func handleAppEnteredBackground() {
+        print("[ModelManager] App entered background - performing cleanup")
+        
+        // Cancel any running generation
+        currentModel.cancel()
+        
+        // Clear output to save memory
+        currentModel.output = ""
+        
+        // Clear MLX cache
+        MLX.GPU.clearCache()
+    }
+    
+    private func handleMemoryPressure() {
+        print("[ModelManager] Memory pressure detected - performing aggressive cleanup")
+        
+        // Cancel any running generation
+        currentModel.cancel()
+        
+        // Clear output
+        currentModel.output = ""
+        
+        // Clear MLX cache
+        MLX.GPU.clearCache()
+        
+        // If pressure is severe, perform emergency recovery
+        Task {
+            let memoryUsage = getUsedMemory()
+            if memoryUsage > 6500 * 1024 * 1024 { // 6.5GB
+                await performEmergencyRecovery()
+            }
+        }
+    }
+    
+    private func performEmergencyRecovery() async {
+        guard !isRecovering else { return }
+        guard recoveryAttempts < maxRecoveryAttempts else {
+            print("[ModelManager] Max recovery attempts reached - giving up")
+            return
+        }
+        
+        isRecovering = true
+        recoveryAttempts += 1
+        
+        print("[ModelManager] Performing emergency recovery (attempt \(recoveryAttempts))")
+        
+        // Force cancel everything
+        currentModel.cancel()
+        
+        // Wait for cancellation
+        var waitCount = 0
+        while currentModel.running && waitCount < 20 {
+            try? await Task.sleep(for: .milliseconds(100))
+            waitCount += 1
+        }
+        
+        // Clear all state
+        currentModel.output = ""
+        
+        // Aggressive cache clearing
+        MLX.GPU.clearCache()
+        
+        // Small delay
+        try? await Task.sleep(for: .milliseconds(500))
+        
+        // Try to reload the model
+        do {
+            await currentModel.load()
+            print("[ModelManager] Emergency recovery successful")
+            recoveryAttempts = 0 // Reset on success
+        } catch {
+            print("[ModelManager] Emergency recovery failed: \(error)")
+            
+            // If recovery failed, try switching to a different model
+            if recoveryAttempts >= 2 {
+                let alternativeModel: ModelType = selectedModelType == .fastVLM ? .smolVLM : .fastVLM
+                print("[ModelManager] Switching to alternative model: \(alternativeModel)")
+                await switchModel(to: alternativeModel)
+            }
+        }
+        
+        isRecovering = false
     }
     
     func switchModel(to modelType: ModelType) async {
@@ -101,6 +221,9 @@ class ModelManager {
         // Clear MLX cache before loading new model
         MLX.GPU.clearCache()
         
+        // Small delay for cleanup
+        try? await Task.sleep(for: .milliseconds(200))
+        
         // Create new model
         currentModel = ModelFactory.createModel(type: modelType)
         
@@ -113,7 +236,14 @@ class ModelManager {
         }
         
         switchingProgress = "Loading \(modelType.displayName)..."
-        await currentModel.load()
+        
+        do {
+            await currentModel.load()
+            recoveryAttempts = 0 // Reset on successful load
+        } catch {
+            print("[ModelManager] Failed to load model: \(error)")
+            // Could attempt recovery here
+        }
         
         Task {
             try? await Task.sleep(for: .milliseconds(500))
@@ -125,10 +255,22 @@ class ModelManager {
     }
     
     func loadCurrentModel() async {
-        await currentModel.load()
+        do {
+            await currentModel.load()
+        } catch {
+            print("[ModelManager] Failed to load current model: \(error)")
+            // Attempt recovery
+            await performEmergencyRecovery()
+        }
     }
     
     func generate(_ userInput: UserInput) async -> Task<Void, Never> {
+        // Check if we're in a recovery state
+        if isRecovering {
+            print("[ModelManager] Currently recovering - skipping generation")
+            return Task { }
+        }
+        
         if ProcessInfo.processInfo.physicalMemory > 0 {
             let usedMemory = getUsedMemory()
             let totalMemory = ProcessInfo.processInfo.physicalMemory
@@ -137,6 +279,14 @@ class ModelManager {
             if memoryUsagePercent > 80 {
                 print("[ModelManager] High memory usage: \(Int(memoryUsagePercent))% - triggering cleanup")
                 MLX.GPU.clearCache()
+                
+                // If memory is critically high, perform emergency recovery
+                if memoryUsagePercent > 90 {
+                    Task {
+                        await performEmergencyRecovery()
+                    }
+                    return Task { }
+                }
             }
         }
         
@@ -152,6 +302,11 @@ class ModelManager {
             
             if currentModel.running {
                 print("[ModelManager] Warning: Previous generation did not cancel cleanly")
+                // Force recovery if cancellation fails
+                Task {
+                    await performEmergencyRecovery()
+                }
+                return Task { }
             }
         }
         
@@ -185,7 +340,8 @@ class ModelManager {
     
     var modelInfo: String {
         let primaryInfo = currentModel.modelInfo
-        return primaryInfo.isEmpty ? "Loading \(selectedModelType.rawValue)..." : "\(selectedModelType.rawValue): \(primaryInfo)"
+        let recoveryInfo = isRecovering ? " (Recovering)" : ""
+        return primaryInfo.isEmpty ? "Loading \(selectedModelType.rawValue)...\(recoveryInfo)" : "\(selectedModelType.rawValue): \(primaryInfo)\(recoveryInfo)"
     }
     
     var output: String {
@@ -197,7 +353,8 @@ class ModelManager {
     }
     
     var allModelsStatus: String {
-        return "\(selectedModelType.rawValue): \(running ? "Running" : "Ready")"
+        let status = running ? "Running" : (isRecovering ? "Recovering" : "Ready")
+        return "\(selectedModelType.rawValue): \(status)"
     }
     
     var memoryStatus: String {
@@ -207,7 +364,8 @@ class ModelManager {
         let totalMB = totalMemory / 1024 / 1024
         let percentage = Double(usedMemory) / Double(totalMemory) * 100
         
-        return "\(usedMB)MB / \(totalMB)MB (\(Int(percentage))%)"
+        let pressureInfo = isRecovering ? " (Recovering)" : ""
+        return "\(usedMB)MB / \(totalMB)MB (\(Int(percentage))%)\(pressureInfo)"
     }
     
     deinit {
