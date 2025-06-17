@@ -27,12 +27,8 @@ class SpeechManager: ObservableObject {
     
     private let speechDelegate: SpeechDelegate
     
-    private var shouldStartAutoSpeech = false
-    private var isGenerationComplete = false
-    private var finalTextToSpeak: String = ""
-    
-    private var hasTriggeredAutoSpeechForCurrentResponse = false
-    private var lastResponseStartTime: Date?
+    private var shouldAutoSpeak = false
+    private var isCurrentlyGenerating = false
     
     init() {
         self.autoReadResponses = UserDefaults.standard.bool(forKey: "autoReadResponses")
@@ -99,59 +95,39 @@ class SpeechManager: ObservableObject {
     func handleResponseUpdate(_ text: String, isFirstToken: Bool = false, isComplete: Bool = false) {
         if autoReadResponses {
             if isFirstToken {
-                // Reset flags for new response
-                shouldStartAutoSpeech = true
-                isGenerationComplete = false
-                finalTextToSpeak = ""
+                // Mark that we should auto-speak when generation completes
+                shouldAutoSpeak = true
+                isCurrentlyGenerating = true
+                print("[SpeechManager] First token received - will auto-speak when complete")
             }
             
-            // Store the latest text
-            finalTextToSpeak = text
-            
+            // Don't speak during generation - only store the intent
             if isComplete {
-                // Generation is complete, now speak the final text
-                isGenerationComplete = true
-                if shouldStartAutoSpeech && !isSpeaking {
-                    speak(finalTextToSpeak)
-                    shouldStartAutoSpeech = false // Prevent multiple triggers
+                isCurrentlyGenerating = false
+                if shouldAutoSpeak && !isSpeaking {
+                    speak(text)
+                    shouldAutoSpeak = false
+                    print("[SpeechManager] Generation complete - speaking response")
                 }
-            } else if shouldStartAutoSpeech && !isSpeaking && shouldStartSpeaking(text) {
-                // Only start speaking if we haven't started yet and content is meaningful
-                // But don't speak during generation - wait for completion
-                // We'll just mark that we should speak when complete
             }
         }
     }
     
     func handleGenerationComplete(_ finalText: String) {
-        if autoReadResponses && shouldStartAutoSpeech && !isSpeaking {
+        if autoReadResponses && shouldAutoSpeak && !isSpeaking {
+            isCurrentlyGenerating = false
             speak(finalText)
-            shouldStartAutoSpeech = false
+            shouldAutoSpeak = false
+            print("[SpeechManager] Generation complete - speaking final response")
         }
     }
     
     func resetAutoSpeechFlag() {
-        shouldStartAutoSpeech = false
-        isGenerationComplete = false
-        finalTextToSpeak = ""
+        shouldAutoSpeak = false
+        isCurrentlyGenerating = false
+        print("[SpeechManager] Auto-speech flags reset")
     }
-    
-    private func shouldStartSpeaking(_ text: String) -> Bool {
-        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        // Don't speak if text is too short (less than 10 characters)
-        guard trimmedText.count >= 10 else { return false }
-        
-        // Don't speak if it's just a few words without a complete thought
-        let words = trimmedText.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
-        guard words.count >= 3 else { return false }
-        
-        // Look for sentence endings or meaningful content indicators
-        let hasCompleteSentence = trimmedText.contains(".") || trimmedText.contains("!") || trimmedText.contains("?")
-        let hasSubstantialContent = trimmedText.count >= 20
-        
-        return hasCompleteSentence || hasSubstantialContent
-    }
+
     
     func updatePreferences(voice: AVSpeechSynthesisVoice?, rate: Float) {
         preferredVoiceIdentifier = voice?.identifier

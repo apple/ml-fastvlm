@@ -20,7 +20,7 @@ struct SpeechSettingsView: View {
         NavigationView {
             Form {
                 Section("Auto-Read Settings") {
-                    Toggle("Automatically read continous responses", isOn: $speechManager.autoReadResponses)
+                    Toggle("Automatically read continuous responses", isOn: $speechManager.autoReadResponses)
                     
                     Text("When enabled, vision model responses will be spoken automatically without needing to tap the speaker button.")
                         .font(.caption)
