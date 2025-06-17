@@ -38,6 +38,8 @@ class SmolVLMModel: VLMModelProtocol {
     public var output = ""
     public var promptTime: String = ""
     
+    weak var speechManager: SpeechManager?
+    
     enum LoadState {
         case idle
         case loaded(ModelContainer)
@@ -78,6 +80,10 @@ class SmolVLMModel: VLMModelProtocol {
     public init() {
         // SmolVLM initialization - set up model configuration
         setupModelConfiguration()
+    }
+    
+    func setSpeechManager(_ speechManager: SpeechManager) {
+        self.speechManager = speechManager
     }
     
     private func setupModelConfiguration() {
@@ -254,6 +260,8 @@ class SmolVLMModel: VLMModelProtocol {
         
         running = true
         
+        speechManager?.resetAutoSpeechFlag()
+        
         // Cancel any existing task
         currentTask?.cancel()
         
@@ -423,6 +431,7 @@ class SmolVLMModel: VLMModelProtocol {
                                 self.evaluationState = .generatingResponse
                                 self.output = text
                                 self.promptTime = "\(Int(llmDuration * 1000)) ms"
+                                self.speechManager?.handleResponseUpdate(text, isFirstToken: true)
                             }
                         }
                         
@@ -432,6 +441,7 @@ class SmolVLMModel: VLMModelProtocol {
                             Task { @MainActor in
                                 if !Task.isCancelled {
                                     self.output = text
+                                    self.speechManager?.handleResponseUpdate(text)
                                 }
                             }
                         }
@@ -466,6 +476,7 @@ class SmolVLMModel: VLMModelProtocol {
                     Task { @MainActor in
                         self.output = result.output
                         self.promptTime += " | \(String(format: "%.1f", result.tokensPerSecond)) tok/s"
+                        self.speechManager?.handleGenerationComplete(result.output)
                     }
                 }
                 

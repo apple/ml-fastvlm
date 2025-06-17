@@ -27,6 +27,13 @@ class SpeechManager: ObservableObject {
     
     private let speechDelegate: SpeechDelegate
     
+    private var shouldStartAutoSpeech = false
+    private var isGenerationComplete = false
+    private var finalTextToSpeak: String = ""
+    
+    private var hasTriggeredAutoSpeechForCurrentResponse = false
+    private var lastResponseStartTime: Date?
+    
     init() {
         self.autoReadResponses = UserDefaults.standard.bool(forKey: "autoReadResponses")
         self.preferredVoiceIdentifier = UserDefaults.standard.string(forKey: "preferredVoiceIdentifier")
@@ -87,6 +94,63 @@ class SpeechManager: ObservableObject {
         if autoReadResponses {
             speak(text)
         }
+    }
+    
+    func handleResponseUpdate(_ text: String, isFirstToken: Bool = false, isComplete: Bool = false) {
+        if autoReadResponses {
+            if isFirstToken {
+                // Reset flags for new response
+                shouldStartAutoSpeech = true
+                isGenerationComplete = false
+                finalTextToSpeak = ""
+            }
+            
+            // Store the latest text
+            finalTextToSpeak = text
+            
+            if isComplete {
+                // Generation is complete, now speak the final text
+                isGenerationComplete = true
+                if shouldStartAutoSpeech && !isSpeaking {
+                    speak(finalTextToSpeak)
+                    shouldStartAutoSpeech = false // Prevent multiple triggers
+                }
+            } else if shouldStartAutoSpeech && !isSpeaking && shouldStartSpeaking(text) {
+                // Only start speaking if we haven't started yet and content is meaningful
+                // But don't speak during generation - wait for completion
+                // We'll just mark that we should speak when complete
+            }
+        }
+    }
+    
+    func handleGenerationComplete(_ finalText: String) {
+        if autoReadResponses && shouldStartAutoSpeech && !isSpeaking {
+            speak(finalText)
+            shouldStartAutoSpeech = false
+        }
+    }
+    
+    func resetAutoSpeechFlag() {
+        shouldStartAutoSpeech = false
+        isGenerationComplete = false
+        finalTextToSpeak = ""
+    }
+    
+    private func shouldStartSpeaking(_ text: String) -> Bool {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Don't speak if text is too short (less than 10 characters)
+        guard trimmedText.count >= 10 else { return false }
+        
+        // Don't speak if it's just a few words without a complete thought
+        let words = trimmedText.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
+        guard words.count >= 3 else { return false }
+        
+        // Look for sentence endings or meaningful content indicators
+        let hasCompleteSentence = trimmedText.contains(".") || trimmedText.contains("!") || trimmedText.contains("?")
+        let hasSubstantialContent = trimmedText.count >= 20
+        
+        return hasCompleteSentence || hasSubstantialContent
     }
     
     func updatePreferences(voice: AVSpeechSynthesisVoice?, rate: Float) {

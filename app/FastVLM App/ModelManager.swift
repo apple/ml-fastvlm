@@ -18,6 +18,8 @@ class ModelManager {
     var isSwitchingModels = false
     var switchingProgress: String = ""
     
+    weak var speechManager: SpeechManager?
+    
     private var lastMemoryWarning: Date?
     private let memoryWarningThreshold: TimeInterval = 5.0 // 5 seconds between warnings
     
@@ -41,6 +43,15 @@ class ModelManager {
         self.currentModel = ModelFactory.createModel(type: .smolVLM)
         print("Warning: Running on simulator - GPU functionality limited")
         #endif
+    }
+    
+    func setSpeechManager(_ speechManager: SpeechManager) {
+        self.speechManager = speechManager
+        if let fastVLMModel = currentModel as? FastVLMModel {
+            fastVLMModel.setSpeechManager(speechManager)
+        } else if let smolVLMModel = currentModel as? SmolVLMModel {
+            smolVLMModel.setSpeechManager(speechManager)
+        }
     }
     
     private func handleMemoryWarning() {
@@ -92,6 +103,14 @@ class ModelManager {
         
         // Create new model
         currentModel = ModelFactory.createModel(type: modelType)
+        
+        if let speechManager = self.speechManager {
+            if let fastVLMModel = currentModel as? FastVLMModel {
+                fastVLMModel.setSpeechManager(speechManager)
+            } else if let smolVLMModel = currentModel as? SmolVLMModel {
+                smolVLMModel.setSpeechManager(speechManager)
+            }
+        }
         
         switchingProgress = "Loading \(modelType.displayName)..."
         await currentModel.load()

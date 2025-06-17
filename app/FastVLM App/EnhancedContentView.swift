@@ -291,9 +291,12 @@ struct EnhancedContentView: View {
                             speechManager.speak(modelManager.output)
                         }
                     }) {
-                        Image(systemName: speechManager.isSpeaking ? 
-                            (speechManager.isPaused ? "play.circle.fill" : "pause.circle.fill") : 
-                            "speaker.wave.2.circle.fill")
+                        HStack(spacing: 6) {
+                            Image(systemName: speechManager.isSpeaking ? 
+                                (speechManager.isPaused ? "play.circle.fill" : "pause.circle.fill") : 
+                                "speaker.wave.2.circle.fill")
+                            Text("Read Response")
+                        }
                     }
                     .buttonStyle(.borderless)
                     
@@ -301,7 +304,10 @@ struct EnhancedContentView: View {
                         Button(action: {
                             speechManager.stop()
                         }) {
-                            Image(systemName: "stop.circle.fill")
+                            HStack(spacing: 6) {
+                                Image(systemName: "stop.circle.fill")
+                                Text("Stop")
+                            }
                         }
                         .buttonStyle(.borderless)
                     }

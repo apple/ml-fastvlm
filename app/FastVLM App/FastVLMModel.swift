@@ -19,6 +19,8 @@ class FastVLMModel: VLMModelProtocol {
     public var modelInfo = ""
     public var output = ""
     public var promptTime: String = ""
+    
+    weak var speechManager: SpeechManager?
 
     enum LoadState {
         case idle
@@ -49,6 +51,10 @@ class FastVLMModel: VLMModelProtocol {
 
     public init() {
         FastVLM.register(modelFactory: VLMModelFactory.shared)
+    }
+    
+    func setSpeechManager(_ speechManager: SpeechManager) {
+        self.speechManager = speechManager
     }
 
     private func _load() async throws -> ModelContainer {
@@ -103,6 +109,8 @@ class FastVLMModel: VLMModelProtocol {
         }
 
         running = true
+        
+        speechManager?.resetAutoSpeechFlag()
         
         // Cancel any existing task
         currentTask?.cancel()
@@ -165,6 +173,7 @@ class FastVLMModel: VLMModelProtocol {
                                 evaluationState = .generatingResponse
                                 self.output = text
                                 self.promptTime = "\(Int(llmDuration * 1000)) ms"
+                                self.speechManager?.handleResponseUpdate(text, isFirstToken: true)
                             }
                         }
 
@@ -173,6 +182,7 @@ class FastVLMModel: VLMModelProtocol {
                             let text = context.tokenizer.decode(tokens: tokens)
                             Task { @MainActor in
                                 self.output = text
+                                self.speechManager?.handleResponseUpdate(text)
                             }
                         }
 
@@ -196,6 +206,7 @@ class FastVLMModel: VLMModelProtocol {
                     Task { @MainActor in
                         self.output = result.output
                         self.promptTime += " | \(String(format: "%.1f", result.tokensPerSecond)) tok/s"
+                        self.speechManager?.handleGenerationComplete(result.output)
                     }
                 }
 

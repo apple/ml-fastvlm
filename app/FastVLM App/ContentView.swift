@@ -87,6 +87,7 @@ struct ContentView: View {
                 UIApplication.shared.isIdleTimerDisabled = true
                 #endif
                 memoryMonitor.startMonitoring()
+                modelManager.setSpeechManager(speechManager)
             }
             .onDisappear {
                 #if canImport(UIKit)
@@ -148,14 +149,9 @@ struct ContentView: View {
                     cameraTypeChangeTimer?.invalidate()
                     cameraTypeChangeTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
                         Task { @MainActor in
-                            // Cancel current model generation
                             modelManager.cancel()
-                            
-                            // Cancel and restart frame distribution with proper cleanup
                             frameDistributionTask?.cancel()
-                            
                             try? await Task.sleep(for: .milliseconds(200))
-                            
                             frameDistributionTask = Task {
                                 if !Task.isCancelled {
                                     await distributeVideoFrames()
@@ -272,9 +268,7 @@ struct ContentView: View {
                                     Image(systemName: speechManager.isSpeaking ?
                                         (speechManager.isPaused ? "play.circle" : "pause.circle") :
                                         "speaker.wave.2.circle")
-                                    Text(speechManager.isSpeaking ?
-                                        (speechManager.isPaused ? "Resume" : "Pause") :
-                                        "Read Response")
+                                    Text("Read Response")
                                 }
                                 .font(.caption)
                             }
@@ -375,7 +369,6 @@ struct ContentView: View {
     }
 
     func analyzeVideoFrames(_ frames: AsyncStream<CVImageBuffer>) async {
-        // Only run analysis in continuous mode
         let currentCameraType = await MainActor.run { selectedCameraType }
         if currentCameraType != .continuous {
             print("[ContentView] Not in continuous mode, skipping analysis")
@@ -435,11 +428,6 @@ struct ContentView: View {
             
             Task {
                 _ = await modelManager.generate(userInput)
-                await MainActor.run {
-                    if !modelManager.output.isEmpty {
-                        speechManager.speakIfAutoEnabled(modelManager.output)
-                    }
-                }
             }
             
             print("[ContentView] Completed inference for frame \(frameCount), waiting 10 seconds...")
@@ -505,7 +493,7 @@ struct ContentView: View {
                         let memoryPressure = ProcessInfo.processInfo.thermalState
                         if memoryPressure != .nominal {
                             print("[ContentView] System under pressure: \(memoryPressure) - reducing frame rate")
-                            if frameCount % 3 != 0 { // Changed from % 5 to % 3
+                            if frameCount % 3 != 0 {
                                 continue
                             }
                         }
@@ -552,8 +540,6 @@ struct ContentView: View {
         print("[ContentView] distributeVideoFrames completed")
     }
 
-    /// Perform VLM inference on a single frame.
-    /// - Parameter frame: The frame to analyze.
     func processSingleFrame(_ frame: CVImageBuffer) {
         Task { @MainActor in
             modelManager.currentModel.output = ""
@@ -567,16 +553,9 @@ struct ContentView: View {
 
         Task {
             _ = await modelManager.generate(userInput)
-            await MainActor.run {
-                if !modelManager.output.isEmpty {
-                    speechManager.speakIfAutoEnabled(modelManager.output)
-                }
-            }
         }
     }
 }
-
-// MARK: - Navigation Bar Modifier
 
 struct NavigationBarModifier: ViewModifier {
     let modelManager: ModelManager
@@ -695,8 +674,6 @@ struct NavigationBarModifier: ViewModifier {
     ContentView()
 }
 
-// MARK: - Model Selector Sheet
-    
 private extension ContentView {
     var modelSelectorSheet: some View {
         NavigationView {
