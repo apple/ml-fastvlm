@@ -139,3 +139,4 @@ dmypy.json
 
 # FastVLM models
 app/FastVLM/model
+app/FastVLM App/Models/SmolVLMModel/model.safetensors
