@@ -410,7 +410,7 @@ struct ContentView: View {
             // detach from the camera controller and feed to the video view
             await MainActor.run {
                 self.framesToDisplay = nil
-                self.camera.detatch()
+                self.camera.detach()
             }
 
             framesToDisplayContinuation.finish()

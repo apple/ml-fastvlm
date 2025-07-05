@@ -43,7 +43,7 @@ public class CameraController: NSObject {
         }
     }
 
-    public func detatch() {
+    public func detach() {
         sessionQueue.async {
             self.framesContinuation = nil
         }
