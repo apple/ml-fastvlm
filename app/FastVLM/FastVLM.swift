@@ -585,7 +585,7 @@ public struct FastVLMConfiguration: Codable, Sendable {
         public let vocabularySize: Int
         public let kvHeads: Int
         private let _maxPositionEmbeddings: Int?
-        public var maxpPositionEmbeddings: Int { _maxPositionEmbeddings ?? 32768 }
+        public var maxPositionEmbeddings: Int { _maxPositionEmbeddings ?? 32768 }
         private let _ropeTheta: Float?
         public var ropeTheta: Float { _ropeTheta ?? 1_000_000 }
         private let _ropeTraditional: Bool?
