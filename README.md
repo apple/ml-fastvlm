@@ -1,3 +1,34 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=apple&project=ml-fastvlm&lang=id">Bahasa Indonesia</a>
+      </div>
+    </div>
+  </details>
+</div>
+
 # FastVLM: Efficient Vision Encoding for Vision Language Models
 
 This is the official repository of
