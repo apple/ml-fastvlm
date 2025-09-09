@@ -136,6 +136,10 @@ dmypy.json
 
 # Xcode
 *.xcworkspace
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+project.pbxproj.orig
 
 # FastVLM models
 app/FastVLM/model
