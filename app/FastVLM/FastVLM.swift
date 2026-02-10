@@ -103,7 +103,7 @@ private enum Language {
         }
 
         public func callAsFunction(
-            _ x: MLXArray, mask: MLXArray? = nil, cache: KVCache?
+            _ x: MLXArray, mask: MLXFast.ScaledDotProductAttentionMaskMode? = nil, cache: KVCache?
         ) -> MLXArray {
             let (B, L) = (x.dim(0), x.dim(1))
 
@@ -117,7 +117,7 @@ private enum Language {
             values = values.reshaped(B, L, kvHeads, headDim).transposed(0, 2, 1, 3)
 
             let offset = cache?.offset ?? 0
-            let mask = mask?[0..., 0 ..< keys.dim(-2)]
+            let attnMask = mask?.masks?.first?[0..., 0 ..< keys.dim(-2)]
 
             queries = rotaryEmbedding(queries, offset: offset)
             keys = rotaryEmbedding(keys, offset: offset)
@@ -127,8 +127,13 @@ private enum Language {
             }
 
             let output = MLXFast.scaledDotProductAttention(
-                queries: queries, keys: keys, values: values, scale: scale, mask: mask
+                queries: queries,
+                keys: keys,
+                values: values,
+                scale: scale,
+                mask: attnMask
             )
+
             .transposed(0, 2, 1, 3)
             .reshaped(B, L, -1)
 
@@ -171,7 +176,7 @@ private enum Language {
         }
 
         public func callAsFunction(
-            _ x: MLXArray, mask: MLXArray? = nil, cache: KVCache?
+            _ x: MLXArray, mask: MLXFast.ScaledDotProductAttentionMaskMode? = nil, cache: KVCache?
         ) -> MLXArray {
             var r = attention(inputLayerNorm(x), mask: mask, cache: cache)
             let h = x + r
@@ -361,15 +366,31 @@ public class FastVLMProcessor: UserInputProcessor {
     }
 
     public func prepare(prompt: UserInput.Prompt, imageTHW: THW?) -> String {
-        var messages = prompt.asMessages()
-        if messages[0]["role"] != "system" {
+        // Build messages array without relying on asMessages()
+        // Assume `UserInput.Prompt` carries a primary text content; try common names.
+        let promptText: String = {
+            switch prompt {
+            case .text(let text):
+                return text
+
+            case .messages(let messages):
+                return messages.map { $0.description }.joined(separator: "\n")
+
+            case .chat(let messages):
+                return messages.map(\.content).joined(separator: "\n")
+            }
+        }()
+        // Start with a single user message containing the prompt text
+        var messages: [[String: String]] = [["role": "user", "content": promptText]]
+
+        // Ensure a system prompt exists as the first message
+        if messages.isEmpty || messages[0]["role"] != "system" {
             messages.insert(["role": "system", "content": "You are a helpful assistant."], at: 0)
         }
 
         let lastIndex = messages.count - 1
         var lastMessage = messages[lastIndex]["content"] ?? ""
 
-        // processing_llava.py
         if let imageTHW {
             let height = imageTHW.h
             let width = imageTHW.w
@@ -411,7 +432,7 @@ public class FastVLMProcessor: UserInputProcessor {
 
         let (pixels, thw) = try preprocess(
             image: input.images[0].asCIImage(), processing: input.processing)
-        let image = LMInput.ProcessedImage(pixels: pixels, imageGridThw: [thw])
+        let image = LMInput.ProcessedImage(pixels: pixels, frames: [thw])
 
         let prompt = prepare(prompt: input.prompt, imageTHW: thw)
         let promptTokens = tokenizer.encode(text: prompt)
@@ -537,7 +558,7 @@ public class FastVLM: Module, VLMModel, KVCacheDimensionProvider {
     public func prepare(_ input: LMInput, cache: [any KVCache], windowSize: Int?) throws
         -> PrepareResult
     {
-        let gridThw = input.image?.imageGridThw
+        let gridThw = input.image?.frames
 
         let dtype = DType.float32
         let pixels = input.image?.pixels.asType(dtype)
