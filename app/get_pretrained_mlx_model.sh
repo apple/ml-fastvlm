@@ -99,7 +99,7 @@ download_model() {
 
     # Download model
     echo -e "\nDownloading '${model}' model ...\n"
-    wget -q --progress=bar:noscroll --show-progress -O "$tmp_zip_file" "$base_url/$model.zip"
+curl -L --progress-bar "$base_url/$model.zip" -o "$tmp_zip_file"
 
     # Unzip model
     echo -e "\nUnzipping model..."
