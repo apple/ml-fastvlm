@@ -138,4 +138,10 @@ dmypy.json
 *.xcworkspace
 
 # FastVLM models
-app/FastVLM/model
+app/FastVLM/model/
+
+# Xcode per-user state
+xcuserdata/
+
+# Model checkpoints
+checkpoints/
