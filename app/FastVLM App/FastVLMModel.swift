@@ -7,9 +7,11 @@ import CoreImage
 import FastVLM
 import Foundation
 import MLX
+import MLXHuggingFace
 import MLXLMCommon
 import MLXRandom
 import MLXVLM
+import Tokenizers
 
 @Observable
 @MainActor
@@ -48,24 +50,26 @@ class FastVLMModel {
     public var evaluationState = EvaluationState.idle
 
     public init() {
-        FastVLM.register(modelFactory: VLMModelFactory.shared)
+        Task {
+            await FastVLM.register(modelFactory: VLMModelFactory.shared)
+        }
     }
 
     private func _load() async throws -> ModelContainer {
         switch loadState {
         case .idle:
             // limit the buffer cache
-            MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
+            MLX.Memory.cacheLimit = 20 * 1024 * 1024
+
+            let modelDirectory = Bundle(for: FastVLM.self)
+                .url(forResource: "config", withExtension: "json")!
+                .resolvingSymlinksInPath()
+                .deletingLastPathComponent()
 
             let modelContainer = try await VLMModelFactory.shared.loadContainer(
-                configuration: modelConfiguration
-            ) {
-                [modelConfiguration] progress in
-                Task { @MainActor in
-                    self.modelInfo =
-                        "Downloading \(modelConfiguration.name): \(Int(progress.fractionCompleted * 100))%"
-                }
-            }
+                from: modelDirectory,
+                using: #huggingFaceTokenizerLoader()
+            )
             self.modelInfo = "Loaded"
             loadState = .loaded(modelContainer)
             return modelContainer
@@ -115,11 +119,14 @@ class FastVLMModel {
                     let input = try await context.processor.prepare(input: userInput)
                     
                     var seenFirstToken = false
+                    var allTokens = [Int]()
 
                     // FastVLM generates the output
                     let result = try MLXLMCommon.generate(
                         input: input, parameters: generateParameters, context: context
-                    ) { tokens in
+                    ) { token in
+                        allTokens.append(token)
+
                         // Check if task was cancelled
                         if Task.isCancelled {
                             return .stop
@@ -131,7 +138,9 @@ class FastVLMModel {
                             // produced first token, update the time to first token,
                             // the processing state and start displaying the text
                             let llmDuration = Date().timeIntervalSince(llmStart)
-                            let text = context.tokenizer.decode(tokens: tokens)
+                            let text = context.tokenizer.decode(tokenIds: [
+                                token
+                            ])
                             Task { @MainActor in
                                 evaluationState = .generatingResponse
                                 self.output = text
@@ -140,27 +149,29 @@ class FastVLMModel {
                         }
 
                         // Show the text in the view as it generates
-                        if tokens.count % displayEveryNTokens == 0 {
-                            let text = context.tokenizer.decode(tokens: tokens)
+                        if allTokens.count % displayEveryNTokens == 0 {
+                            let text = context.tokenizer.decode(
+                                tokenIds: allTokens
+                            )
                             Task { @MainActor in
                                 self.output = text
                             }
                         }
 
-                        if tokens.count >= maxTokens {
+                        if allTokens.count >= maxTokens {
                             return .stop
                         } else {
                             return .more
                         }
                     }
                     
-                    // Return the duration of the LLM and the result
-                    return result
+                    // Return the final decoded text
+                    return context.tokenizer.decode(tokenIds: allTokens)
                 }
                 
                 // Check if task was cancelled before updating UI
                 if !Task.isCancelled {
-                    self.output = result.output
+                    self.output = result
                 }
 
             } catch {

@@ -8,19 +8,20 @@
 
 /* Begin PBXBuildFile section */
 		019A3E1A2D78E7370055F93B /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E192D78E7370055F93B /* MLX */; };
-		019A3E1C2D78E73E0055F93B /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E1B2D78E73E0055F93B /* MLXLMCommon */; };
 		019A3E1E2D78E7470055F93B /* MLXRandom in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E1D2D78E7470055F93B /* MLXRandom */; };
-		019A3E202D78E74C0055F93B /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = 019A3E1F2D78E74C0055F93B /* MLXVLM */; };
 		019A3E212D78E7530055F93B /* Video.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; };
 		019A3E222D78E7530055F93B /* Video.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C35372AE2D08C32D00474D34 /* Video.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C3ED544E2D790860005E20B3 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED544D2D790860005E20B3 /* MLXLMCommon */; };
-		C3ED54502D790860005E20B3 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED544F2D790860005E20B3 /* MLXVLM */; };
 		C3ED54522D790860005E20B3 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54512D790860005E20B3 /* MLX */; };
 		C3ED54542D790860005E20B3 /* MLXNN in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54532D790860005E20B3 /* MLXNN */; };
 		C3ED54582D790A68005E20B3 /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED54572D790A68005E20B3 /* MLXFast */; };
 		C3ED545B2D790AD6005E20B3 /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = C3ED545A2D790AD6005E20B3 /* Transformers */; };
 		C3ED55012D7A0A7A005E20B3 /* FastVLM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C39BB3E62D79082A005DB8FB /* FastVLM.framework */; };
 		C3ED55022D7A0A7A005E20B3 /* FastVLM.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C39BB3E62D79082A005DB8FB /* FastVLM.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		EA383C3E2FD5B8A40013B7C0 /* MLXHuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = EA383C3D2FD5B8A40013B7C0 /* MLXHuggingFace */; };
+		EA383C402FD5B8A40013B7C0 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = EA383C3F2FD5B8A40013B7C0 /* MLXLMCommon */; };
+		EA383C422FD5B8A40013B7C0 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = EA383C412FD5B8A40013B7C0 /* MLXVLM */; };
+		EA383C452FD5B9240013B7C0 /* HuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = EA383C442FD5B9240013B7C0 /* HuggingFace */; };
+		EA383C472FD5B9790013B7C0 /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = EA383C462FD5B9790013B7C0 /* Tokenizers */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -124,12 +125,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				019A3E1C2D78E73E0055F93B /* MLXLMCommon in Frameworks */,
+				EA383C3E2FD5B8A40013B7C0 /* MLXHuggingFace in Frameworks */,
+				EA383C472FD5B9790013B7C0 /* Tokenizers in Frameworks */,
 				019A3E212D78E7530055F93B /* Video.framework in Frameworks */,
 				C3ED55012D7A0A7A005E20B3 /* FastVLM.framework in Frameworks */,
 				019A3E1E2D78E7470055F93B /* MLXRandom in Frameworks */,
-				019A3E202D78E74C0055F93B /* MLXVLM in Frameworks */,
 				019A3E1A2D78E7370055F93B /* MLX in Frameworks */,
+				EA383C452FD5B9240013B7C0 /* HuggingFace in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -144,12 +146,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EA383C402FD5B8A40013B7C0 /* MLXLMCommon in Frameworks */,
 				C3ED545B2D790AD6005E20B3 /* Transformers in Frameworks */,
+				EA383C422FD5B8A40013B7C0 /* MLXVLM in Frameworks */,
 				C3ED54522D790860005E20B3 /* MLX in Frameworks */,
-				C3ED54502D790860005E20B3 /* MLXVLM in Frameworks */,
 				C3ED54542D790860005E20B3 /* MLXNN in Frameworks */,
 				C3ED54582D790A68005E20B3 /* MLXFast in Frameworks */,
-				C3ED544E2D790860005E20B3 /* MLXLMCommon in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,9 +230,10 @@
 			name = "FastVLM App";
 			packageProductDependencies = (
 				019A3E192D78E7370055F93B /* MLX */,
-				019A3E1B2D78E73E0055F93B /* MLXLMCommon */,
 				019A3E1D2D78E7470055F93B /* MLXRandom */,
-				019A3E1F2D78E74C0055F93B /* MLXVLM */,
+				EA383C3D2FD5B8A40013B7C0 /* MLXHuggingFace */,
+				EA383C442FD5B9240013B7C0 /* HuggingFace */,
+				EA383C462FD5B9790013B7C0 /* Tokenizers */,
 			);
 			productName = FastVLMCameraExample;
 			productReference = 019A3E0A2D78E6A00055F93B /* FastVLM App.app */;
@@ -277,12 +280,12 @@
 			);
 			name = FastVLM;
 			packageProductDependencies = (
-				C3ED544D2D790860005E20B3 /* MLXLMCommon */,
-				C3ED544F2D790860005E20B3 /* MLXVLM */,
 				C3ED54512D790860005E20B3 /* MLX */,
 				C3ED54532D790860005E20B3 /* MLXNN */,
 				C3ED54572D790A68005E20B3 /* MLXFast */,
 				C3ED545A2D790AD6005E20B3 /* Transformers */,
+				EA383C3F2FD5B8A40013B7C0 /* MLXLMCommon */,
+				EA383C412FD5B8A40013B7C0 /* MLXVLM */,
 			);
 			productName = FastVLM;
 			productReference = C39BB3E62D79082A005DB8FB /* FastVLM.framework */;
@@ -320,9 +323,10 @@
 			mainGroup = C35EDB632D07699400757E80;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */,
 				C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */,
 				C3ED54592D790AC6005E20B3 /* XCRemoteSwiftPackageReference "swift-transformers" */,
+				EA383C3C2FD5B8A40013B7C0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
+				EA383C432FD5B9240013B7C0 /* XCRemoteSwiftPackageReference "swift-huggingface" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C35EDB702D076A5A00757E80 /* Products */;
@@ -1086,14 +1090,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ml-explore/mlx-swift-examples";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.21.2;
-			};
-		};
 		C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ml-explore/mlx-swift";
@@ -1107,8 +1103,28 @@
 			repositoryURL = "https://github.com/huggingface/swift-transformers";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.18;
+				minimumVersion = 1.3.0;
 			};
+			traits = (
+			);
+		};
+		EA383C3C2FD5B8A40013B7C0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-lm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.31.3;
+			};
+		};
+		EA383C432FD5B9240013B7C0 /* XCRemoteSwiftPackageReference "swift-huggingface" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/huggingface/swift-huggingface";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
+			};
+			traits = (
+			);
 		};
 /* End XCRemoteSwiftPackageReference section */
 
@@ -1118,30 +1134,10 @@
 			package = C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */;
 			productName = MLX;
 		};
-		019A3E1B2D78E73E0055F93B /* MLXLMCommon */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
-			productName = MLXLMCommon;
-		};
 		019A3E1D2D78E7470055F93B /* MLXRandom */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C35EDB8A2D07777E00757E80 /* XCRemoteSwiftPackageReference "mlx-swift" */;
 			productName = MLXRandom;
-		};
-		019A3E1F2D78E74C0055F93B /* MLXVLM */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
-			productName = MLXVLM;
-		};
-		C3ED544D2D790860005E20B3 /* MLXLMCommon */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
-			productName = MLXLMCommon;
-		};
-		C3ED544F2D790860005E20B3 /* MLXVLM */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C35EDB6A2D076A3900757E80 /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
-			productName = MLXVLM;
 		};
 		C3ED54512D790860005E20B3 /* MLX */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1162,6 +1158,31 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C3ED54592D790AC6005E20B3 /* XCRemoteSwiftPackageReference "swift-transformers" */;
 			productName = Transformers;
+		};
+		EA383C3D2FD5B8A40013B7C0 /* MLXHuggingFace */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EA383C3C2FD5B8A40013B7C0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXHuggingFace;
+		};
+		EA383C3F2FD5B8A40013B7C0 /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EA383C3C2FD5B8A40013B7C0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLMCommon;
+		};
+		EA383C412FD5B8A40013B7C0 /* MLXVLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EA383C3C2FD5B8A40013B7C0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXVLM;
+		};
+		EA383C442FD5B9240013B7C0 /* HuggingFace */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EA383C432FD5B9240013B7C0 /* XCRemoteSwiftPackageReference "swift-huggingface" */;
+			productName = HuggingFace;
+		};
+		EA383C462FD5B9790013B7C0 /* Tokenizers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C3ED54592D790AC6005E20B3 /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Tokenizers;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
