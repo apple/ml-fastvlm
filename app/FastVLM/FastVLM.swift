@@ -103,7 +103,9 @@ private enum Language {
         }
 
         public func callAsFunction(
-            _ x: MLXArray, mask: MLXArray? = nil, cache: KVCache?
+            _ x: MLXArray,
+            mask: MLXFast.ScaledDotProductAttentionMaskMode = .none,
+            cache: KVCache?
         ) -> MLXArray {
             let (B, L) = (x.dim(0), x.dim(1))
 
@@ -117,7 +119,7 @@ private enum Language {
             values = values.reshaped(B, L, kvHeads, headDim).transposed(0, 2, 1, 3)
 
             let offset = cache?.offset ?? 0
-            let mask = mask?[0..., 0 ..< keys.dim(-2)]
+            let mask = mask
 
             queries = rotaryEmbedding(queries, offset: offset)
             keys = rotaryEmbedding(keys, offset: offset)
@@ -171,7 +173,9 @@ private enum Language {
         }
 
         public func callAsFunction(
-            _ x: MLXArray, mask: MLXArray? = nil, cache: KVCache?
+            _ x: MLXArray,
+            mask: MLXFast.ScaledDotProductAttentionMaskMode = .none,
+            cache: KVCache?
         ) -> MLXArray {
             var r = attention(inputLayerNorm(x), mask: mask, cache: cache)
             let h = x + r
@@ -213,7 +217,11 @@ private enum Language {
                 fatalError("one of inputs or inputEmbedding must be non-nil")
             }
 
-            let mask = createAttentionMask(h: h, cache: cache)
+            let mask = createAttentionMask(
+                h: h,
+                cache: cache?.first,
+                windowSize: nil
+            )
 
             for (i, layer) in layers.enumerated() {
                 h = layer(h, mask: mask, cache: cache?[i])
@@ -326,13 +334,16 @@ private enum Vision {
 /// FastVLM `UserInputProcessor`.
 ///
 /// This is meant to be used with ``FastVLM`` and is typically created by ``VLMModelFactory``.
-public class FastVLMProcessor: UserInputProcessor {
+public final class FastVLMProcessor: UserInputProcessor {
 
     private let config: FastVLMProcessorConfiguration
     private let imageProcessingConfig: FastVLMPreProcessorConfiguration
-    private let tokenizer: any Tokenizer
+    private let tokenizer: any MLXLMCommon.Tokenizer
 
-    public init(_ config: FastVLMPreProcessorConfiguration, tokenizer: any Tokenizer) {
+    public init(
+        _ config: FastVLMPreProcessorConfiguration,
+        tokenizer: any MLXLMCommon.Tokenizer
+    ) {
         self.config = FastVLMProcessorConfiguration()
         self.imageProcessingConfig = config
         self.tokenizer = tokenizer
@@ -361,7 +372,22 @@ public class FastVLMProcessor: UserInputProcessor {
     }
 
     public func prepare(prompt: UserInput.Prompt, imageTHW: THW?) -> String {
-        var messages = prompt.asMessages()
+        var messages: [[String: String]]
+        switch prompt {
+        case .messages(let msgs):
+            messages = msgs.compactMap { msg in
+                guard let role = msg["role"] as? String,
+                    let content = msg["content"] as? String
+                else { return nil }
+                return ["role": role, "content": content]
+            }
+        case .text(let text):
+            messages = [["role": "user", "content": text]]
+        case .chat(let chatMessages):
+            messages = chatMessages.map {
+                ["role": $0.role.rawValue, "content": $0.content]
+            }
+        }
         if messages[0]["role"] != "system" {
             messages.insert(["role": "system", "content": "You are a helpful assistant."], at: 0)
         }
@@ -411,7 +437,7 @@ public class FastVLMProcessor: UserInputProcessor {
 
         let (pixels, thw) = try preprocess(
             image: input.images[0].asCIImage(), processing: input.processing)
-        let image = LMInput.ProcessedImage(pixels: pixels, imageGridThw: [thw])
+        let image = LMInput.ProcessedImage(pixels: pixels, frames: [thw])
 
         let prompt = prepare(prompt: input.prompt, imageTHW: thw)
         let promptTokens = tokenizer.encode(text: prompt)
@@ -464,16 +490,24 @@ public class FastVLM: Module, VLMModel, KVCacheDimensionProvider {
         return ModelConfiguration(directory: url)
     }
 
-    static public func register(modelFactory: VLMModelFactory) {
-        modelFactory.typeRegistry.registerModelType("llava_qwen2") { url in
+    @MainActor
+    static public func register(modelFactory: VLMModelFactory) async {
+        await modelFactory.typeRegistry.registerModelType("llava_qwen2") {
+            data in
             let configuration = try JSONDecoder().decode(
-                FastVLMConfiguration.self, from: Data(contentsOf: url))
+                FastVLMConfiguration.self,
+                from: data
+            )
             return FastVLM(configuration)
         }
 
-        modelFactory.processorRegistry.registerProcessorType("LlavaProcessor") { url, tokenizer in
+        await modelFactory.processorRegistry.registerProcessorType(
+            "LlavaProcessor"
+        ) { (data: Data, tokenizer: any MLXLMCommon.Tokenizer) in
             let configuration = try JSONDecoder().decode(
-                FastVLMPreProcessorConfiguration.self, from: Data(contentsOf: url))
+                FastVLMPreProcessorConfiguration.self,
+                from: data
+            )
             return FastVLMProcessor(configuration, tokenizer: tokenizer)
         }
     }
@@ -488,8 +522,12 @@ public class FastVLM: Module, VLMModel, KVCacheDimensionProvider {
     public var vocabularySize: Int { config.baseConfiguration.vocabularySize }
     public var kvHeads: [Int] { languageModel.kvHeads }
 
-    public func loraLinearLayers() -> MLXLMCommon.LoRALinearLayers {
-        languageModel.model.layers.map { ($0.attention, ["q_proj", "v_proj"]) }
+    public var loraLayers: [MLXNN.Module] {
+        languageModel.model.layers
+    }
+
+    public var loraDefaultKeys: [String] {
+        ["q_proj", "v_proj"]
     }
 
     public init(_ config: FastVLMConfiguration) {
@@ -537,7 +575,7 @@ public class FastVLM: Module, VLMModel, KVCacheDimensionProvider {
     public func prepare(_ input: LMInput, cache: [any KVCache], windowSize: Int?) throws
         -> PrepareResult
     {
-        let gridThw = input.image?.imageGridThw
+        let gridThw = input.image?.frames
 
         let dtype = DType.float32
         let pixels = input.image?.pixels.asType(dtype)
