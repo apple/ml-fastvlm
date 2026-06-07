@@ -8,6 +8,27 @@ This is the official repository of
 <img src="docs/acc_vs_latency_qwen-2.png" alt="Accuracy vs latency figure." width="400"/>
 </p>
 
+## Building with Current Packages (June 2026)
+
+> **Note for developers:** This repository was published as a single frozen commit in May 2025.
+> The Swift app no longer builds against current package versions due to breaking changes in
+> `mlx-swift-lm 3.x` and the migration of `MLXLMCommon`/`MLXVLM` out of `mlx-swift-examples`
+> into a new repository.
+>
+> A working fix is available on the
+> [`fix/mlx-swift-lm-3x`](https://github.com/tmorales2000/ml-fastvlm/tree/fix/mlx-swift-lm-3x)
+> branch of this fork, tested on macOS with M1 Pro and M4 Pro against:
+> - `mlx-swift` 0.25.6
+> - `mlx-swift-lm` 3.31.3
+> - `swift-transformers` 1.3.3
+> - `swift-huggingface` 0.9.0
+>
+> See the open [pull request](https://github.com/apple/ml-fastvlm/pull/78) and
+> [issue](https://github.com/apple/ml-fastvlm/issues/77) on Apple's repo for details.
+>
+> **macOS note:** `get_models.sh` and `app/get_pretrained_mlx_model.sh` require `wget`,
+> which is not installed by default on macOS. This fork patches both scripts to use `curl` instead.
+
 ### Highlights
 * We introduce FastViTHD, a novel hybrid vision encoder designed to output fewer tokens and significantly reduce encoding time for high-resolution images.  
 * Our smallest variant outperforms LLaVA-OneVision-0.5B with 85x faster Time-to-First-Token (TTFT) and 3.4x smaller vision encoder.
