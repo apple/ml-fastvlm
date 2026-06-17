@@ -91,13 +91,28 @@ class MobileCLIPVisionTower(nn.Module):
     def dummy_feature(self):
         return torch.zeros(1, self.hidden_size, device=self.device, dtype=self.dtype)
 
+    def _vision_tower_tensor(self):
+        for tensor in self.vision_tower.parameters():
+            return tensor
+
+        for module in self.vision_tower.modules():
+            former_parameters = getattr(module, "_former_parameters", None)
+            if former_parameters:
+                for tensor in former_parameters.values():
+                    return tensor
+
+        for tensor in self.vision_tower.buffers():
+            return tensor
+
+        raise RuntimeError("MobileCLIP vision tower has no parameters or buffers.")
+
     @property
     def dtype(self):
-        return next(self.vision_tower.parameters()).dtype
+        return self._vision_tower_tensor().dtype
 
     @property
     def device(self):
-        return next(self.vision_tower.parameters()).device
+        return self._vision_tower_tensor().device
 
     @property
     def config(self):
